@@ -11,7 +11,7 @@ The change should be grouped under one of the below section and must contain PR 
 Please add the latest change on the top under the correct section.
 -->
 
-## Unreleased
+## 0.15.2 (2023-06-29)
 
 ### Features
 
@@ -27,6 +27,133 @@ Please add the latest change on the top under the correct section.
   - `props.onClose` replaced with `props.onStateChange`.
   - `restore()`/`restoreAppState()` now retains `appState.openSidebar` regardless of docked state.
 
+## Excalidraw Library
+
+**_This section lists the updates made to the excalidraw library and will not affect the integration._**
+
+### Features
+
+- Overwrite confirmation dialogs [#6658](https://github.com/excalidraw/excalidraw/pull/6658)
+
+- Simple analitycs [#6683](https://github.com/excalidraw/excalidraw/pull/6683)
+
+- Introduce frames [#6123](https://github.com/excalidraw/excalidraw/pull/6123)
+
+- Add canvas-roundrect-polyfill package [#6675](https://github.com/excalidraw/excalidraw/pull/6675)
+
+- Polyfill `CanvasRenderingContext2D.roundRect` [#6673](https://github.com/excalidraw/excalidraw/pull/6673)
+
+- Disable collab feature when running in iframe [#6646](https://github.com/excalidraw/excalidraw/pull/6646)
+
+- Assign random user name when not set [#6663](https://github.com/excalidraw/excalidraw/pull/6663)
+
+- Redesigned collab cursors [#6659](https://github.com/excalidraw/excalidraw/pull/6659)
+
+- Eye dropper [#6615](https://github.com/excalidraw/excalidraw/pull/6615)
+
+- Redesign of Live Collaboration dialog [#6635](https://github.com/excalidraw/excalidraw/pull/6635)
+
+- Recover scrolled position after Library re-opening [#6624](https://github.com/excalidraw/excalidraw/pull/6624)
+
+- Clearing library cache [#6621](https://github.com/excalidraw/excalidraw/pull/6621)
+
+- Update design of ImageExportDialog [#6614](https://github.com/excalidraw/excalidraw/pull/6614)
+
+- Add flipping for multiple elements [#5578](https://github.com/excalidraw/excalidraw/pull/5578)
+
+- Color picker redesign [#6216](https://github.com/excalidraw/excalidraw/pull/6216)
+
+- Add "unlock all elements" to canvas contextMenu [#5894](https://github.com/excalidraw/excalidraw/pull/5894)
+
+- Library sidebar design tweaks [#6582](https://github.com/excalidraw/excalidraw/pull/6582)
+
+- Add Trans component for interpolating JSX in translations [#6534](https://github.com/excalidraw/excalidraw/pull/6534)
+
+- Testing simple analytics and fathom analytics for better privacy of the users [#6529](https://github.com/excalidraw/excalidraw/pull/6529)
+
+- Retain `seed` on shift-paste [#6509](https://github.com/excalidraw/excalidraw/pull/6509)
+
+- Allow `avif`, `jfif`, `webp`, `bmp`, `ico` image types (#6500
+
+### Fixes
+
+- Elements in non-existing frame getting removed [#6708](https://github.com/excalidraw/excalidraw/pull/6708)
+
+- Scrollbars renders but disable [#6706](https://github.com/excalidraw/excalidraw/pull/6706)
+
+- Typo in chart.ts [#6696](https://github.com/excalidraw/excalidraw/pull/6696)
+
+- Do not bind text to container using text tool when it has text already [#6694](https://github.com/excalidraw/excalidraw/pull/6694)
+
+- Don't allow binding text to images [#6693](https://github.com/excalidraw/excalidraw/pull/6693)
+
+- Updated link for documentation page under help section [#6654](https://github.com/excalidraw/excalidraw/pull/6654)
+
+- Collab username style fixes [#6668](https://github.com/excalidraw/excalidraw/pull/6668)
+
+- Bound arrows not updated when rotating multiple elements [#6662](https://github.com/excalidraw/excalidraw/pull/6662)
+
+- Delete setCursor when resize [#6660](https://github.com/excalidraw/excalidraw/pull/6660)
+
+- Creating text while color picker open [#6651](https://github.com/excalidraw/excalidraw/pull/6651)
+
+- Cleanup textWysiwyg and getAdjustedDimensions [#6520](https://github.com/excalidraw/excalidraw/pull/6520)
+
+- Eye dropper not accounting for offsets [#6640](https://github.com/excalidraw/excalidraw/pull/6640)
+
+- Color picker input closing problem [#6599](https://github.com/excalidraw/excalidraw/pull/6599)
+
+- Export dialog shortcut toggles console on firefox [#6620](https://github.com/excalidraw/excalidraw/pull/6620)
+
+- Add react v17 `useTransition` polyfill [#6618](https://github.com/excalidraw/excalidraw/pull/6618)
+
+- Library dropdown visibility issue for mobile [#6613](https://github.com/excalidraw/excalidraw/pull/6613)
+
+- `withInternalFallback` leaking state in multi-instance scenarios [#6602](https://github.com/excalidraw/excalidraw/pull/6602)
+
+- Language list containing duplicate `en` lang [#6583](https://github.com/excalidraw/excalidraw/pull/6583)
+
+- Garbled text displayed on avatars [#6575](https://github.com/excalidraw/excalidraw/pull/6575)
+
+- Assign the original text to text editor only during init [#6580](https://github.com/excalidraw/excalidraw/pull/6580)
+
+- I18n: Apply Trans component to publish library dialogue [#6564](https://github.com/excalidraw/excalidraw/pull/6564)
+
+- Fix brave error i18n string and remove unused [#6561](https://github.com/excalidraw/excalidraw/pull/6561)
+
+- Revert add version tags to Docker build [#6540](https://github.com/excalidraw/excalidraw/pull/6540)
+
+- Don't refresh dimensions for text containers on font load [#6523](https://github.com/excalidraw/excalidraw/pull/6523)
+
+- Cleanup getMaxContainerHeight and getMaxContainerWidth [#6519](https://github.com/excalidraw/excalidraw/pull/6519)
+
+- Cleanup redrawTextBoundingBox [#6518](https://github.com/excalidraw/excalidraw/pull/6518)
+
+- Text jumps when editing on Android Chrome [#6503](https://github.com/excalidraw/excalidraw/pull/6503)
+
+### Styles
+
+- Removes extra spaces [#6558](https://github.com/excalidraw/excalidraw/pull/6558)
+
+- Fix font family inconsistencies [#6501](https://github.com/excalidraw/excalidraw/pull/6501)
+
+###  Refactor
+
+- Simplify `ImageExportDialog` [#6578](https://github.com/excalidraw/excalidraw/pull/6578)
+
+### Performance
+
+- Memoize rendering of library [#6622](https://github.com/excalidraw/excalidraw/pull/6622)
+
+- Improve rendering performance for Library [#6587](https://github.com/excalidraw/excalidraw/pull/6587)
+
+- Use `UIAppState` where possible to reduce UI rerenders [#6560](https://github.com/excalidraw/excalidraw/pull/6560)
+
+### Build
+
+- Add version tags to Docker build [#6508](https://github.com/excalidraw/excalidraw/pull/6508)
+
+---
 ## 0.15.2 (2023-04-20)
 
 ### Docs
