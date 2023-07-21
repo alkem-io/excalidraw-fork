@@ -260,7 +260,7 @@ export const loadScene = async (
     // the private key is used to decrypt the content from the server, take
     // extra care not to leak it
     data = restore(
-      await importFromBackend(id, privateKey),
+      {},
       localDataState?.appState,
       localDataState?.elements,
       { repairBindings: true, refreshDimensions: false },
