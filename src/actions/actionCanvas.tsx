@@ -1,5 +1,5 @@
 import { ColorPicker } from "../components/ColorPicker/ColorPicker";
-import { ZoomInIcon, ZoomOutIcon, zoomToFit } from "../components/icons";
+import { ZoomInIcon, ZoomOutIcon, zoomToFitIcon } from "../components/icons";
 import { ToolButton } from "../components/ToolButton";
 import { CURSOR_TYPE, MIN_ZOOM, THEME, ZOOM_STEP } from "../constants";
 import { getCommonBounds, getNonDeletedElements } from "../element";
@@ -350,19 +350,19 @@ export const actionZoomToFit = register({
     event.shiftKey &&
     !event.altKey &&
     !event[KEYS.CTRL_OR_CMD],
-    PanelComponent: ({ updateData, data }) => (
-      <ToolButton
-        type="button"
-        icon={zoomToFit}
-        className={clsx("zoomToFit")}
-        title={`${t("toolBar.zoomToFit")} — ${getShortcutKey("Shift+1")}`}
-        aria-label={t("toolBar.zoomToFit")}
-        onClick={() => {
-          updateData(null);
-        }}
-        size={data?.size || "small"}
-      />
-    ),
+  PanelComponent: ({ updateData, data }) => (
+    <ToolButton
+      type="button"
+      icon={zoomToFitIcon}
+      className={clsx("zoomToFit")}
+      title={`${t("toolBar.zoomToFit")} — ${getShortcutKey("Shift+1")}`}
+      aria-label={t("toolBar.zoomToFit")}
+      onClick={() => {
+        updateData(null);
+      }}
+      size={data?.size || "small"}
+    />
+  ),
 });
 
 export const actionToggleTheme = register({
