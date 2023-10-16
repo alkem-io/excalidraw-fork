@@ -46,6 +46,7 @@
 ```
 yarn
 cd src/packages/excalidraw
+yarn install
 yarn build:umd
 yarn pack
 yarn publish
