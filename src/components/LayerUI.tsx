@@ -2,7 +2,7 @@ import clsx from "clsx";
 import React from "react";
 import { ActionManager } from "../actions/manager";
 import { CLASSES, DEFAULT_SIDEBAR, LIBRARY_SIDEBAR_WIDTH } from "../constants";
-import { isTextElement, showSelectedShapeActions } from "../element";
+import { showSelectedShapeActions } from "../element";
 import { NonDeletedExcalidrawElement } from "../element/types";
 import { Language, t } from "../i18n";
 import { calculateScrollCenter } from "../scene";
@@ -52,12 +52,16 @@ import { EyeDropper, activeEyeDropperAtom } from "./EyeDropper";
 
 import "./LayerUI.scss";
 import "./Toolbar.scss";
+import { mutateElement } from "../element/mutateElement";
+import { ShapeCache } from "../scene/ShapeCache";
+import Scene from "../scene/Scene";
 
 interface LayerUIProps {
   actionManager: ActionManager;
   appState: UIAppState;
   files: BinaryFiles;
-  canvas: HTMLCanvasElement | null;
+  canvas: HTMLCanvasElement;
+  interactiveCanvas: HTMLCanvasElement | null;
   setAppState: React.Component<any, AppState>["setState"];
   elements: readonly NonDeletedExcalidrawElement[];
   onLockToggle: () => void;
@@ -72,6 +76,7 @@ interface LayerUIProps {
   onExportImage: AppClassProperties["onExportImage"];
   renderWelcomeScreen: boolean;
   children?: React.ReactNode;
+  app: AppClassProperties;
 }
 
 const DefaultMainMenu: React.FC<{
@@ -116,6 +121,7 @@ const LayerUI = ({
   setAppState,
   elements,
   canvas,
+  interactiveCanvas,
   onLockToggle,
   onHandToolToggle,
   onPenModeToggle,
@@ -127,6 +133,7 @@ const LayerUI = ({
   onExportImage,
   renderWelcomeScreen,
   children,
+  app,
 }: LayerUIProps) => {
   const device = useDevice();
   const tunnels = useInitializeTunnels();
@@ -240,9 +247,9 @@ const LayerUI = ({
                       >
                         <HintViewer
                           appState={appState}
-                          elements={elements}
                           isMobile={device.isMobile}
                           device={device}
+                          app={app}
                         />
                         {heading}
                         <Stack.Row gap={1}>
@@ -270,7 +277,7 @@ const LayerUI = ({
 
                           <ShapesSwitcher
                             appState={appState}
-                            canvas={canvas}
+                            interactiveCanvas={interactiveCanvas}
                             activeTool={appState.activeTool}
                             setAppState={setAppState}
                             onImageAction={({ pointerType }) => {
@@ -364,10 +371,43 @@ const LayerUI = ({
       )}
       {eyeDropperState && !device.isMobile && (
         <EyeDropper
-          swapPreviewOnAlt={eyeDropperState.swapPreviewOnAlt}
-          previewType={eyeDropperState.previewType}
+          colorPickerType={eyeDropperState.colorPickerType}
           onCancel={() => {
             setEyeDropperState(null);
+          }}
+          onChange={(colorPickerType, color, selectedElements, { altKey }) => {
+            if (
+              colorPickerType !== "elementBackground" &&
+              colorPickerType !== "elementStroke"
+            ) {
+              return;
+            }
+
+            if (selectedElements.length) {
+              for (const element of selectedElements) {
+                mutateElement(
+                  element,
+                  {
+                    [altKey && eyeDropperState.swapPreviewOnAlt
+                      ? colorPickerType === "elementBackground"
+                        ? "strokeColor"
+                        : "backgroundColor"
+                      : colorPickerType === "elementBackground"
+                      ? "backgroundColor"
+                      : "strokeColor"]: color,
+                  },
+                  false,
+                );
+                ShapeCache.delete(element);
+              }
+              Scene.getScene(selectedElements[0])?.informMutation();
+            } else if (colorPickerType === "elementBackground") {
+              setAppState({
+                currentItemBackgroundColor: color,
+              });
+            } else {
+              setAppState({ currentItemStrokeColor: color });
+            }
           }}
           onSelect={(color, event) => {
             setEyeDropperState((state) => {
@@ -399,8 +439,9 @@ const LayerUI = ({
           }
         />
       )}
-      {device.isMobile && !eyeDropperState && (
+      {device.isMobile && (
         <MobileMenu
+          app={app}
           appState={appState}
           elements={elements}
           actionManager={actionManager}
@@ -410,7 +451,7 @@ const LayerUI = ({
           onLockToggle={onLockToggle}
           onHandToolToggle={onHandToolToggle}
           onPenModeToggle={onPenModeToggle}
-          canvas={canvas}
+          interactiveCanvas={interactiveCanvas}
           onImageAction={onImageAction}
           renderTopRightUI={renderTopRightUI}
           renderCustomStats={renderCustomStats}
@@ -422,13 +463,7 @@ const LayerUI = ({
       {!device.isMobile && (
         <>
           <div
-            className={clsx("layer-ui__wrapper", {
-              "disable-pointerEvents":
-                appState.draggingElement ||
-                appState.resizingElement ||
-                (appState.editingElement &&
-                  !isTextElement(appState.editingElement)),
-            })}
+            className="layer-ui__wrapper"
             style={
               appState.openSidebar &&
               isSidebarDocked &&
@@ -461,7 +496,7 @@ const LayerUI = ({
                 className="scroll-back-to-content"
                 onClick={() => {
                   setAppState((appState) => ({
-                    ...calculateScrollCenter(elements, appState, canvas),
+                    ...calculateScrollCenter(elements, appState),
                   }));
                 }}
               >
@@ -504,8 +539,18 @@ const areEqual = (prevProps: LayerUIProps, nextProps: LayerUIProps) => {
     return false;
   }
 
-  const { canvas: _prevCanvas, appState: prevAppState, ...prev } = prevProps;
-  const { canvas: _nextCanvas, appState: nextAppState, ...next } = nextProps;
+  const {
+    canvas: _pC,
+    interactiveCanvas: _pIC,
+    appState: prevAppState,
+    ...prev
+  } = prevProps;
+  const {
+    canvas: _nC,
+    interactiveCanvas: _nIC,
+    appState: nextAppState,
+    ...next
+  } = nextProps;
 
   return (
     isShallowEqual(
