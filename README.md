@@ -2,6 +2,7 @@
   <a href="https://alkemio.foundation/" target="blank"><img src="https://alkemio.foundation/uploads/logos/alkemio-logo.svg" width="400" alt="Alkemio Logo" /></a>
 </p>
 <p align="center"><i>Enabling society to collaborate. Building a better future, together.</i></p>
+
 # Alkemio fork of Excalidraw v0.16.1
 - Upgraded from Excalidraw v0.15.2 to v0.16.1
   - Sync master branch from github
@@ -13,6 +14,7 @@
   $ git remote add upstream git@github.com:excalidraw/excalidraw.git
   ```
   - Checkout a new Branch pointing to the same commit as the tag:
+  ```
   $ git checkout -b branch-v0.16.1 tags/v0.16.1
   ```
   - Push the new branch to GitHub and create the PR there or merge localy if there are conflicts
