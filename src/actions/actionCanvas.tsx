@@ -22,7 +22,6 @@ import {
 import { DEFAULT_CANVAS_BACKGROUND_PICKS } from "../colors";
 import { Bounds } from "../element/bounds";
 import { setCursor } from "../cursor";
-import clsx from "clsx";
 
 export const actionChangeViewBackgroundColor = register({
   name: "changeViewBackgroundColor",
@@ -354,14 +353,13 @@ export const actionZoomToFit = register({
   PanelComponent: ({ updateData, data }) => (
     <ToolButton
       type="button"
+      className="zoom-to-fit-button zoom-button"
       icon={zoomToFitIcon}
-      className={clsx("zoomToFit")}
       title={`${t("toolBar.zoomToFit")} — ${getShortcutKey("Shift+1")}`}
       aria-label={t("toolBar.zoomToFit")}
       onClick={() => {
         updateData(null);
       }}
-      size={data?.size || "small"}
     />
   ),
 });
