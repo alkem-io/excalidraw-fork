@@ -2,21 +2,56 @@
   <a href="https://alkemio.foundation/" target="blank"><img src="https://alkemio.foundation/uploads/logos/alkemio-logo.svg" width="400" alt="Alkemio Logo" /></a>
 </p>
 <p align="center"><i>Enabling society to collaborate. Building a better future, together.</i></p>
+# Alkemio fork of Excalidraw v0.17.0
+- Upgraded from Excalidraw v0.16.1 to v0.17.0
+  - Procedure is very similar to previous versions below:
+  ```
+  git fetch --tags upstream
+  git checkout 0.16.1-alkemio-1
+  git merge v0.17.0
+  git push --set-upstream origin 0.17.0-alkemio-1
+  ```
+- Applied the new styles of the buttons to Alkemio's ZoomToFit added button
+
+### For testing you can link the new package from the local client
+
+```
+npm link
+cd ../client-web
+npm link @alkemio/excalidraw --save
+```
+
+### Build and publish the new npm package:
+
+```
+yarn
+cd src/packages/excalidraw
+yarn install
+yarn build:umd
+yarn pack
+yarn publish
+```
 
 # Alkemio fork of Excalidraw v0.16.1
+
 - Upgraded from Excalidraw v0.15.2 to v0.16.1
+
   - Sync master branch from github
   - `git pull`
   - Sync tags:
+
   ```
   $ git fetch --tags upstream
   ## Assuming upstream is already pointing to the excalidraw repo, if not, just run:
   $ git remote add upstream git@github.com:excalidraw/excalidraw.git
   ```
+
   - Checkout a new Branch pointing to the same commit as the tag:
+
   ```
   $ git checkout -b branch-v0.16.1 tags/v0.16.1
   ```
+
   - Push the new branch to GitHub and create the PR there or merge localy if there are conflicts
 
 - Fixed merge conflicts and a small issue with the zoomToFit icon, they have added a function with the same name.

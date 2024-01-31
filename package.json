@@ -100,7 +100,7 @@
   },
   "homepage": "https://github.com/alkem-io/excalidraw",
   "name": "@alkemio/excalidraw",
-  "version": "0.16.1-alkemio-1",
+  "version": "0.17.0-alkemio-2",
   "prettier": "@excalidraw/prettier-config",
   "private": false,
   "scripts": {
