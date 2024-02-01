@@ -2225,7 +2225,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
- public pasteFromClipboard = withBatchedUpdates(
+  public pasteFromClipboard = withBatchedUpdates(
     async (event: ClipboardEvent) => {
       const isPlainPaste = !!IS_PLAIN_PASTE;
 
@@ -2324,8 +2324,8 @@ class App extends React.Component<AppProps, AppState> {
         const elements = (
           data.programmaticAPI
             ? convertToExcalidrawElements(
-              data.elements as ExcalidrawElementSkeleton[],
-            )
+                data.elements as ExcalidrawElementSkeleton[],
+              )
             : data.elements
         ) as readonly ExcalidrawElement[];
         // TODO remove formatting from elements if isPlainPaste
