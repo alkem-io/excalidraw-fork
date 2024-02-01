@@ -2225,7 +2225,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
-  public pasteFromClipboard = withBatchedUpdates(
+ public pasteFromClipboard = withBatchedUpdates(
     async (event: ClipboardEvent) => {
       const isPlainPaste = !!IS_PLAIN_PASTE;
 
@@ -2237,6 +2237,10 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
+      // These two lines are moved up by Alkemio to avoid pasting images json as text inside text elements
+      let file = event?.clipboardData?.files[0];
+      const data = parseClipboard(event, isPlainPaste);
+
       const elementUnderCursor = document.elementFromPoint(
         this.lastViewportPosition.x,
         this.lastViewportPosition.y,
@@ -2244,7 +2248,8 @@ class App extends React.Component<AppProps, AppState> {
       if (
         event &&
         (!(elementUnderCursor instanceof HTMLCanvasElement) ||
-          isWritableElement(target))
+          isWritableElement(target)) &&
+        !data.elements // If there are any elements, they will not be inserted as text
       ) {
         return;
       }
@@ -2257,12 +2262,6 @@ class App extends React.Component<AppProps, AppState> {
         this.state,
       );
 
-      // must be called in the same frame (thus before any awaits) as the paste
-      // event else some browsers (FF...) will clear the clipboardData
-      // (something something security)
-      let file = event?.clipboardData?.files[0];
-
-      const data = await parseClipboard(event, isPlainPaste);
       if (!file && !isPlainPaste) {
         if (data.mixedContent) {
           return this.addElementsFromMixedContentPaste(data.mixedContent, {
@@ -2325,8 +2324,8 @@ class App extends React.Component<AppProps, AppState> {
         const elements = (
           data.programmaticAPI
             ? convertToExcalidrawElements(
-                data.elements as ExcalidrawElementSkeleton[],
-              )
+              data.elements as ExcalidrawElementSkeleton[],
+            )
             : data.elements
         ) as readonly ExcalidrawElement[];
         // TODO remove formatting from elements if isPlainPaste
