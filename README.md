@@ -1,10 +1,12 @@
-s<p align="center"> <a href="https://alkemio.foundation/" target="blank"><img src="https://alkemio.foundation/uploads/logos/alkemio-logo.svg" width="400" alt="Alkemio Logo" /></a>
-
+<p align="center"> 
+  <a href="https://alkemio.foundation/" target="blank"><img src="https://alkemio.foundation/uploads/logos/alkemio-logo.svg" width="400" alt="Alkemio Logo" /></a>
 </p>
 <p align="center"><i>Enabling society to collaborate. Building a better future, together.</i></p>
+
 # Alkemio fork of Excalidraw v0.17.0
-- Upgraded from Excalidraw v0.16.1 to v0.17.0
-  - Procedure is very similar to previous versions below:
+
+ - Upgraded from Excalidraw v0.16.1 to v0.17.0
+ - Build Procedure is very similar to previous versions below:
   ```
   git fetch --tags upstream
   git checkout 0.16.1-alkemio-1
@@ -12,7 +14,7 @@ s<p align="center"> <a href="https://alkemio.foundation/" target="blank"><img sr
   git push --set-upstream origin 0.17.0-alkemio-1
   ```
 - Applied the new styles of the buttons to Alkemio's ZoomToFit added button.
-- Modified the paste functionality to avoid pasting elements (such as images) as JSON when editing text.
+- **v0.17.0-alkemio-3-beta**: Modified the paste functionality to avoid pasting elements (such as images) as JSON when editing text.
 
 ### For testing you can link the new package from the local client
 
