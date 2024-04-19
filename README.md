@@ -32,6 +32,18 @@ yarn build:umd
 yarn pack
 yarn publish
 ```
+# Alkemio fork of Excalidraw v0.17.0-alkemio-4
+- Added `hideLibraryButton` to the appState to be able to hide the button from outside.
+- Changed the toolbar Lock button behavior. Now it locks/unlocks elements instead of the tool in use
+
+# Alkemio fork of Excalidraw v0.17.0-alkemio-3-beta
+- Changed behavior. Pasting elements is better handled and now it doesn't end up as a big text node with JSON inside.
+
+
+# Alkemio fork of Excalidraw v0.17.0
+
+- Upgraded from Excalidraw v0.16.1 to v0.17.0
+
 
 # Alkemio fork of Excalidraw v0.16.1
 

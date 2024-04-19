@@ -261,6 +261,7 @@ export type AppState = {
   theme: Theme;
   gridSize: number | null;
   viewModeEnabled: boolean;
+  hideLibraryButton: boolean;
 
   /** top-most selected groups (i.e. does not include nested groups) */
   selectedGroupIds: { [groupId: string]: boolean };
