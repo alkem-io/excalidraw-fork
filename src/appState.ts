@@ -210,7 +210,7 @@ const APP_STATE_STORAGE_CONF = (<
   zenModeEnabled: { browser: true, export: false, server: false },
   zoom: { browser: true, export: false, server: false },
   viewModeEnabled: { browser: false, export: false, server: false },
-  hideLibraryButton: { browser: true, export: false, server: false },
+  hideLibraryButton: { browser: false, export: false, server: false },
   pendingImageElementId: { browser: false, export: false, server: false },
   showHyperlinkPopup: { browser: false, export: false, server: false },
   selectedLinearElement: { browser: true, export: false, server: false },
