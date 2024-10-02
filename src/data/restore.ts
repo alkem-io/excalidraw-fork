@@ -16,6 +16,7 @@ import { ImportedDataState, LegacyAppState } from "./types";
 import {
   getNonDeletedElements,
   getNormalizedDimensions,
+  getSceneVersion,
   isInvisiblySmallElement,
   refreshTextDimensions,
 } from "../element";
@@ -422,6 +423,7 @@ export const restoreElements = (
   // used to detect duplicate top-level element ids
   const existingIds = new Set<string>();
   const localElementsMap = localElements ? arrayToMap(localElements) : null;
+  const sceneVersion = getSceneVersion(localElements ?? []);
   const restoredElements = (elements || []).reduce((elements, element) => {
     // filtering out selection, which is legacy, no longer kept in elements,
     // and causing issues if retained
@@ -434,6 +436,8 @@ export const restoreElements = (
         const localElement = localElementsMap?.get(element.id);
         if (localElement && localElement.version > migratedElement.version) {
           migratedElement = bumpVersion(migratedElement, localElement.version);
+        } else {
+          migratedElement = bumpVersion(migratedElement, sceneVersion);
         }
         if (existingIds.has(migratedElement.id)) {
           migratedElement = { ...migratedElement, id: randomId() };
