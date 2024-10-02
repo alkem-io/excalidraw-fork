@@ -41,6 +41,8 @@ yarn publish
 
 ## Change Log
 ### Alkemio fork of Excalidraw v0.17.0-alkemio-5
+- Changed the load from file behavior to fix multi-user collaboration bug. Now elements loaded will have version number > currentScene version number
+- WARNING: This is a test, and it is not going to work, further changes are needed.
 
 ### Alkemio fork of Excalidraw v0.17.0-alkemio-4
 - Added `hideLibraryButton` to the appState to be able to hide the button from outside.
