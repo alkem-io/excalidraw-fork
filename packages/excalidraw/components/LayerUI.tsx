@@ -27,7 +27,7 @@ import { FixedSideContainer } from "./FixedSideContainer";
 import { HintViewer } from "./HintViewer";
 import { Island } from "./Island";
 import { LoadingMessage } from "./LoadingMessage";
-import { LockElementButton } from "./LockElementButton";
+import { LockButton } from "./LockButton";
 import { MobileMenu } from "./MobileMenu";
 import { PasteChartDialog } from "./PasteChartDialog";
 import { Section } from "./Section";
@@ -300,11 +300,7 @@ const LayerUI = ({
                             title={t("toolBar.lock")}
                           />
                           */}
-                          <LockElementButton
-                            disabled={
-                              Object.keys(appState.selectedElementIds)
-                                .length === 0
-                            }
+                          <LockButton
                             checked={allElementsLocked(
                               Object.keys(appState.selectedElementIds),
                             )}
