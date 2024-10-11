@@ -35,6 +35,7 @@ import {
   actionToggleElementLock,
   actionToggleLinearEditor,
   actionToggleObjectsSnapMode,
+  actionZoomToFit,
 } from "../actions";
 import { createRedoAction, createUndoAction } from "../actions/actionHistory";
 import { ActionManager } from "../actions/manager";
@@ -703,6 +704,7 @@ class App extends React.Component<AppProps, AppState> {
           clear: this.resetHistory,
         },
         scrollToContent: this.scrollToContent,
+        zoomToFit: this.zoomToFit,
         getSceneElements: this.getSceneElements,
         getAppState: () => this.state,
         getFiles: () => this.files,
@@ -2294,6 +2296,12 @@ class App extends React.Component<AppProps, AppState> {
         }),
       };
     }
+    if (initialData?.zoomToFit) {
+      // defer to after loading all elements
+      setTimeout(() => {
+        this.actionManager.executeAction(actionZoomToFit);
+      });
+    }
 
     this.resetStore();
     this.resetHistory();
@@ -2927,6 +2935,10 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
+      // These two lines are moved up by Alkemio to avoid pasting images json as text inside text elements
+      let file = event?.clipboardData?.files[0];
+      const data = parseClipboard(event, isPlainPaste);
+
       const elementUnderCursor = document.elementFromPoint(
         this.lastViewportPosition.x,
         this.lastViewportPosition.y,
@@ -2934,7 +2946,8 @@ class App extends React.Component<AppProps, AppState> {
       if (
         event &&
         (!(elementUnderCursor instanceof HTMLCanvasElement) ||
-          isWritableElement(target))
+          isWritableElement(target)) &&
+        !data.elements // If there are any elements, they will not be inserted as text
       ) {
         return;
       }
@@ -2947,11 +2960,6 @@ class App extends React.Component<AppProps, AppState> {
         this.state,
       );
 
-      // must be called in the same frame (thus before any awaits) as the paste
-      // event else some browsers (FF...) will clear the clipboardData
-      // (something something security)
-      let file = event?.clipboardData?.files[0];
-      const data = await parseClipboard(event, isPlainPaste);
       if (!file && !isPlainPaste) {
         if (data.mixedContent) {
           return this.addElementsFromMixedContentPaste(data.mixedContent, {
@@ -3693,6 +3701,10 @@ class App extends React.Component<AppProps, AppState> {
     if (this.state.userToFollow) {
       this.setState({ userToFollow: null });
     }
+  };
+
+  zoomToFit = () => {
+    this.actionManager.executeAction(actionZoomToFit);
   };
 
   /** use when changing scrollX/scrollY/zoom based on user interaction */
