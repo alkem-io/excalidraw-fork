@@ -33,9 +33,9 @@ npm link @alkemio/excalidraw --save
 Find in json files any `'alkemio-XX'` and set the version you want to publish
 ```
 yarn
-cd src/packages/excalidraw
+cd packages/excalidraw
 yarn install
-yarn build:umd
+yarn build:esm
 yarn pack
 yarn publish
 ```
