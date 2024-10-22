@@ -42,10 +42,10 @@ const strokeGrid = (
 ) => {
   const BOLD_LINE_FREQUENCY = 5;
 
-  enum GridLineColor {
-    Bold = "#cccccc",
-    Regular = "#e5e5e5",
-  }
+  const GridLineColor2 = {
+    Bold: "#cccccc",
+    Regular: "#e5e5e5",
+  } as const;
 
   const offsetX =
     -Math.round(zoom.value / gridSize) * gridSize + (scrollX % gridSize);
@@ -65,7 +65,7 @@ const strokeGrid = (
       Math.round(x - scrollX) % (BOLD_LINE_FREQUENCY * gridSize) === 0;
     context.beginPath();
     context.setLineDash(isBold ? [] : lineDash);
-    context.strokeStyle = isBold ? GridLineColor.Bold : GridLineColor.Regular;
+    context.strokeStyle = isBold ? GridLineColor2.Bold : GridLineColor2.Regular;
     context.moveTo(x, offsetY - gridSize);
     context.lineTo(x, offsetY + height + gridSize * 2);
     context.stroke();
@@ -75,7 +75,7 @@ const strokeGrid = (
       Math.round(y - scrollY) % (BOLD_LINE_FREQUENCY * gridSize) === 0;
     context.beginPath();
     context.setLineDash(isBold ? [] : lineDash);
-    context.strokeStyle = isBold ? GridLineColor.Bold : GridLineColor.Regular;
+    context.strokeStyle = isBold ? GridLineColor2.Bold : GridLineColor2.Regular;
     context.moveTo(offsetX - gridSize, y);
     context.lineTo(offsetX + width + gridSize * 2, y);
     context.stroke();
