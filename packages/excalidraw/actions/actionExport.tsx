@@ -20,6 +20,7 @@ import { Theme } from "../element/types";
 
 import "../components/ToolIcon.scss";
 import { StoreAction } from "../store";
+import {reconcileElements, RemoteExcalidrawElement} from "../data/reconcile";
 
 export const actionChangeProjectName = register({
   name: "changeProjectName",
@@ -253,14 +254,19 @@ export const actionLoadScene = register({
     try {
       const {
         elements: loadedElements,
-        appState: loadedAppState,
         files,
       } = await loadFromJSON(appState, elements);
-      return {
+
+      app.addElementsFromPasteOrLibrary({
         elements: loadedElements,
-        appState: loadedAppState,
         files,
+        position: "cursor",
+        fitToContent: true,
+      });
+
+      return {
         storeAction: StoreAction.CAPTURE,
+        replaceFiles: false,
       };
     } catch (error: any) {
       if (error?.name === "AbortError") {
