@@ -704,6 +704,7 @@ export interface ExcalidrawImperativeAPI {
    * used in conjunction with view mode (props.viewModeEnabled).
    */
   updateFrameRendering: InstanceType<typeof App>["updateFrameRendering"];
+  addElementsFromPasteOrLibrary: InstanceType<typeof App>["addElementsFromPasteOrLibrary"];
   onChange: (
     callback: (
       elements: readonly ExcalidrawElement[],
