@@ -1,6 +1,6 @@
 {
   "name": "@alkemio/excalidraw",
-  "version": "0.17.1-alkemio-7",
+  "version": "0.17.1-alkemio-8",
   "main": "./dist/prod/index.js",
   "type": "module",
   "module": "./dist/prod/index.js",
