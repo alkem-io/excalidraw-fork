@@ -42,6 +42,11 @@ yarn publish
 
 ## Change Log
 
+### Alkemio fork of Excalidraw v0.17.0-alkemio-8
+- Version bump to `0.17.1-alkemio-8`
+- `addElementsFromPasteOrLibrary` exposed to the public API
+- opening a file now inserts elements in the current scene. Does not overwrite them anymore.
+
 ### Alkemio fork of Excalidraw v0.17.0-alkemio-4
 - Added `hideLibraryButton` to the appState to be able to hide the button from outside.
 - Changed the toolbar Lock button behavior. Now it locks/unlocks elements instead of the tool in use
