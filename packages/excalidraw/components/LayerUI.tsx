@@ -23,7 +23,7 @@ import { FixedSideContainer } from "./FixedSideContainer";
 import { HintViewer } from "./HintViewer";
 import { Island } from "./Island";
 import { LoadingMessage } from "./LoadingMessage";
-import { LockButton } from "./LockButton";
+import { LockElementButton } from "./LockElementButton";
 import { MobileMenu } from "./MobileMenu";
 import { PasteChartDialog } from "./PasteChartDialog";
 import { Section } from "./Section";
@@ -55,6 +55,7 @@ import { TTDDialog } from "./TTDDialog/TTDDialog";
 import { Stats } from "./Stats";
 import { actionToggleStats } from "../actions";
 import ElementLinkDialog from "./ElementLinkDialog";
+import { actionToggleElementLock } from "../actions";
 
 import "./LayerUI.scss";
 import "./Toolbar.scss";
@@ -220,6 +221,15 @@ const LayerUI = ({
     </Section>
   );
 
+  const allElementsLocked = (elementsIds: string[]) => {
+    if (elementsIds.length === 0) {
+      return false;
+    }
+    return elements
+      .filter((element) => elementsIds.includes(element.id))
+      .every((element) => element.locked);
+  };
+
   const renderFixedSideContainer = () => {
     const shouldRenderSelectedShapeActions = showSelectedShapeActions(
       appState,
@@ -275,10 +285,20 @@ const LayerUI = ({
                               title={t("toolBar.penMode")}
                               penDetected={appState.penDetected}
                             />
-                            <LockButton
-                              checked={appState.activeTool.locked}
-                              onChange={onLockToggle}
-                              title={t("toolBar.lock")}
+                            <LockElementButton
+                              disabled={
+                                Object.keys(appState.selectedElementIds)
+                                  .length === 0
+                              }
+                              checked={allElementsLocked(
+                                Object.keys(appState.selectedElementIds),
+                              )}
+                              onChange={() =>
+                                actionManager.executeAction(
+                                  actionToggleElementLock,
+                                )
+                              }
+                              title={t("toolBar.lockElements")}
                             />
 
                             <div className="App-toolbar__divider" />
@@ -340,6 +360,7 @@ const LayerUI = ({
             )}
             {renderTopRightUI?.(device.editor.isMobile, appState)}
             {!appState.viewModeEnabled &&
+              !appState.hideLibraryButton &&
               appState.openDialog?.name !== "elementLinkSelector" &&
               // hide button when sidebar docked
               (!isSidebarDocked ||
