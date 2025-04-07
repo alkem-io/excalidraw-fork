@@ -774,6 +774,7 @@ export interface ExcalidrawImperativeAPI {
   getFiles: () => InstanceType<typeof App>["files"];
   getName: InstanceType<typeof App>["getName"];
   scrollToContent: InstanceType<typeof App>["scrollToContent"];
+  zoomToFit: InstanceType<typeof App>["zoomToFit"];
   registerAction: (action: Action) => void;
   refresh: InstanceType<typeof App>["refresh"];
   setToast: InstanceType<typeof App>["setToast"];
