@@ -741,6 +741,7 @@ class App extends React.Component<AppProps, AppState> {
         setCursor: this.setCursor,
         resetCursor: this.resetCursor,
         updateFrameRendering: this.updateFrameRendering,
+        addElementsFromPasteOrLibrary: this.addElementsFromPasteOrLibrary,
         toggleSidebar: this.toggleSidebar,
         onChange: (cb) => this.onChangeEmitter.on(cb),
         onPointerDown: (cb) => this.onPointerDownEmitter.on(cb),
