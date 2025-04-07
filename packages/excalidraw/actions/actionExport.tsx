@@ -256,11 +256,20 @@ export const actionLoadScene = register({
         appState: loadedAppState,
         files,
       } = await loadFromJSON(appState, elements);
+
+      app.addElementsFromPasteOrLibrary({
+        elements: loadedElements,
+        files,
+        position: "cursor",
+        fitToContent: true,
+      });
+
       return {
         elements: loadedElements,
         appState: loadedAppState,
         files,
         captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+        replaceFiles: false,
       };
     } catch (error: any) {
       if (error?.name === "AbortError") {

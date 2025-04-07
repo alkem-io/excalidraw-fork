@@ -580,7 +580,7 @@
       "loadFromFile": {
         "title": "Load from file",
         "button": "Load from file",
-        "description": "Loading from a file will <bold>replace your existing content</bold>.<br></br>You can back up your drawing first using one of the options below."
+        "description": "Loading from a file will <bold>insert content on top of your existing content</bold>.<br></br>You can back up your drawing first using one of the options below."
       },
       "shareableLink": {
         "title": "Load from link",
