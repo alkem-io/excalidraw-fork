@@ -3,14 +3,15 @@
 
 </p>
 <p align="center"><i>Enabling society to collaborate. Building a better future, together.</i></p>
-# Alkemio fork of Excalidraw v0.17.0
+
+# Alkemio fork of Excalidraw
 
 ### Upgrade procedure
 ```
   git fetch --tags upstream
-  git checkout 0.16.1-alkemio-1
-  git merge v0.17.0
-  git push --set-upstream origin 0.17.0-alkemio-1
+  git checkout [tag]-alkemio-X
+  git merge [tag]
+  git push --set-upstream origin [tag]-alkemio-1
 ```
 
 ### List of differences with standard Excalidraw
@@ -42,8 +43,12 @@ yarn publish
 
 ## Change Log
 
+### Alkemio fork of Excalidraw v0.18.0-alkemio-1
+- Version bump to `0.18.0-alkemio-1`
+
 ### Alkemio fork of Excalidraw v0.17.0-alkemio-8
 - Version bump to `0.17.1-alkemio-8`
+- `reconcileElements` exposed to the public API
 - `addElementsFromPasteOrLibrary` exposed to the public API
 - opening a file now inserts elements in the current scene. Does not overwrite them anymore.
 
