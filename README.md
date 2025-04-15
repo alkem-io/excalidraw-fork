@@ -18,7 +18,7 @@
 - Added ZoomToFit button to the zoom toolbar
 - Added ZoomToFit flag to initialData to fit items on load
 - Modified the paste functionality to avoid pasting elements (such as images) as JSON when editing text.
-- Added `hideLibraryButton` to the appState to be able to hide the button from outside.
+- Added `hideLibraryButton` to the appState to be able to hide the button from outside (@deprecated, remove on the next Excalidraw upgrade)
 - Changed the toolbar Lock button behavior. Now it locks/unlocks elements instead of the tool in use
 - Changed the load from file behavior to fix multi-user collaboration bug. Now elements loaded will have version number > currentScene version number
 
