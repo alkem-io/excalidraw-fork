@@ -1,6 +1,6 @@
 {
   "name": "@alkemio/excalidraw",
-  "version": "0.18.0-alkemio-1",
+  "version": "0.18.0-alkemio-2",
   "type": "module",
   "types": "./dist/types/excalidraw/index.d.ts",
   "main": "./dist/prod/index.js",

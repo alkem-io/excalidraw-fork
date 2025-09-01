@@ -36,7 +36,6 @@ import {
   actionToggleLinearEditor,
   actionToggleObjectsSnapMode,
   actionToggleCropEditor,
-  actionZoomToFit,
 } from "../actions";
 import { createRedoAction, createUndoAction } from "../actions/actionHistory";
 import { ActionManager } from "../actions/manager";
@@ -726,7 +725,6 @@ class App extends React.Component<AppProps, AppState> {
           clear: this.resetHistory,
         },
         scrollToContent: this.scrollToContent,
-        zoomToFit: this.zoomToFit,
         getSceneElements: this.getSceneElements,
         getAppState: () => this.state,
         getFiles: () => this.files,
@@ -2345,13 +2343,6 @@ class App extends React.Component<AppProps, AppState> {
       };
     }
 
-    if (initialData?.zoomToFit) {
-      // defer to after loading all elements
-      setTimeout(() => {
-        this.actionManager.executeAction(actionZoomToFit);        this.actionManager.executeAction(actionZoomToFit);
-      });
-    }
-
     this.resetStore();
     this.resetHistory();
     this.syncActionResult({
@@ -3799,10 +3790,6 @@ class App extends React.Component<AppProps, AppState> {
     if (this.state.userToFollow) {
       this.setState({ userToFollow: null });
     }
-  };
-
-  zoomToFit = () => {
-    this.actionManager.executeAction(actionZoomToFit);
   };
 
   /** use when changing scrollX/scrollY/zoom based on user interaction */

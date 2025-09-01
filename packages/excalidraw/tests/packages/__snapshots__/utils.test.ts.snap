@@ -49,7 +49,6 @@ exports[`exportToSvg > with default arguments 1`] = `
   },
   "frameToHighlight": null,
   "gridSize": null,
-  "hideLibraryButton": false,
   "isBindingEnabled": true,
   "isLoading": false,
   "isResizing": false,

@@ -362,13 +362,6 @@ export interface AppState {
   gridStep: number;
   gridModeEnabled: boolean;
   viewModeEnabled: boolean;
-  /**
-   * @deprecated
-   * REMOVE on the next Excalidraw upgrade.
-   * This property was added by Alkemio to remove the Excalidraw's library button, but this method requires the Excalidraw package to be modified,
-   * Since #7986 we are using another method to hide the library that doesn't require any Excalidraw's customization. So this flag is not used anymore. Remove it
-   */
-  hideLibraryButton: boolean;
 
   /** top-most selected groups (i.e. does not include nested groups) */
   selectedGroupIds: { [groupId: string]: boolean };
@@ -781,7 +774,6 @@ export interface ExcalidrawImperativeAPI {
   getFiles: () => InstanceType<typeof App>["files"];
   getName: InstanceType<typeof App>["getName"];
   scrollToContent: InstanceType<typeof App>["scrollToContent"];
-  zoomToFit: InstanceType<typeof App>["zoomToFit"];
   registerAction: (action: Action) => void;
   refresh: InstanceType<typeof App>["refresh"];
   setToast: InstanceType<typeof App>["setToast"];
