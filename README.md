@@ -14,11 +14,21 @@
 - ~~Added `hideLibraryButton` to the appState to be able to hide the button from outside~~ not anymore
 
 ### Testing locally inside Alkemio client
+(needs to be reviewed, last time I tried this it didn't work well)
 ```
 cd packages/excalidraw
 npm link
 cd ../../../client-web
 npm link @alkemio/excalidraw --save
+```
+
+### Developing/debugging Excalidraw by itself
+Excalidraw comes with a test application which loads a whiteboard in the browser's local storage and renders just the Excalidraw component.
+It can be run at
+```
+cd packages/excalidraw
+yarn
+yarn start
 ```
 
 ### Notes
@@ -53,9 +63,12 @@ Everytime Excalidraw releases a new package, they publish it in their [GitHub/re
   # example:
   git push --set-upstream origin 0.18.0-alkemio-2
 ```
+Create a Pull Request to develop in excalidraw-fork repository
 
 ### Build and publish the new npm package:
-Find in json files any `'alkemio-X'` and set the version you want to publish
+Find in json files any `'alkemio-X'` and make sure the version matches the number that should be published.
+`yarn:publish` is going to ask for the version number again and it can bump the number but you can just repeat the current version number if it's correct.
+
 ```
 yarn
 cd packages/excalidraw
@@ -66,6 +79,12 @@ yarn publish
 ```
 
 ## Change Log
+### v0.18.0-alkemio-2
+- Removed unused customizations (zoomToFit and hideLibraryButton)
+- Cleaned up Readme and made version updates easier
+
+### v0.19.0-alkemio-1
+- Released by mistake without Alkemio customizations
 
 ### Alkemio fork of Excalidraw v0.18.0-alkemio-1
 - Version bump to `0.18.0-alkemio-1`
