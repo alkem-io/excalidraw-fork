@@ -1,37 +1,61 @@
 
-<p align="center"> <a href="https://alkemio.foundation/" target="blank"><img src="https://alkemio.foundation/uploads/logos/alkemio-logo.svg" width="400" alt="Alkemio Logo" /></a>
-
-</p>
+<p align="center"><a href="https://www.alkemio.org/" target="blank"><img src="https://alkem.io/logo.png" width="400" alt="Alkemio Logo" /></a></p>
 <p align="center"><i>Enabling society to collaborate. Building a better future, together.</i></p>
 
 # Alkemio fork of Excalidraw
 
-### Upgrade procedure
-```
-  git fetch --tags upstream
-  git checkout [tag]-alkemio-X
-  git merge [tag]
-  git push --set-upstream origin [tag]-alkemio-1
-```
-
 ### List of differences with standard Excalidraw
-- ZoomToFit feature exposed through the external API
-- Added ZoomToFit button to the zoom toolbar
-- Added ZoomToFit flag to initialData to fit items on load
+- Added ZoomToFit button to the zoom toolbar.
 - Modified the paste functionality to avoid pasting elements (such as images) as JSON when editing text.
-- Added `hideLibraryButton` to the appState to be able to hide the button from outside (@deprecated, remove on the next Excalidraw upgrade)
-- Changed the toolbar Lock button behavior. Now it locks/unlocks elements instead of the tool in use
-- Changed the load from file behavior to fix multi-user collaboration bug. Now elements loaded will have version number > currentScene version number
+- Changed the toolbar Lock button behavior. Now it locks/unlocks elements instead of the tool in use.
+- Changed the load from file behavior to fix multi-user collaboration bug. Now elements loaded will be inserted in the current scene instead of replacing all the elements of the scene.
+- ~~ZoomToFit feature exposed through the external API~~ not anymore
+- ~~Added ZoomToFit flag to initialData to fit items on load~~ not anymore
+- ~~Added `hideLibraryButton` to the appState to be able to hide the button from outside~~ not anymore
 
 ### Testing locally inside Alkemio client
 ```
+cd packages/excalidraw
 npm link
-cd ../client-web
+cd ../../../client-web
 npm link @alkemio/excalidraw --save
 ```
 
+### Notes
+- For our packages, we are using the Excalidraw's released version + our customizations.
+- Our changes are in `develop` branch.
+- Latest released package is also `develop` branch, we merge to develop after each of our releases.
+- `master` brach is the original code from Excalidraw as-is. By the time of writing this readme, is unstable and shouldn't be released to production.
+- Some tags are kept in the repo from versions released
+- To the released version number we add the suffix `-alkemio-X` being X the number of our release based on this same Excalidraw's releases, normally just `-alkemio-1`.
+
+
+### Upgrade procedure
+Everytime Excalidraw releases a new package, they publish it in their [GitHub/releases](https://github.com/excalidraw/excalidraw/releases) and they indicate in which commit they have based the release.
+
+
+```
+  git fetch --tags upstream
+  git checkout master
+  git pull
+  git checkout -b <new-branch-name> <commit-hash>
+  # example:
+  # git checkout -b 0.18.0-alkemio-2 817d8c553c3389650f8b4503984a6d4a5d2f0c11  (taken from Excalidraw's GitHub releases page)
+
+  # Then merge the Alkemio changes from our branch: develop
+  git merge origin/develop
+  # Solve the conflicts.
+  # Make sure packages/excalidraw/package.json has the correct package version number.
+  # example: 0.18.0-alkemio-2
+
+  # Then push
+  git push --set-upstream origin <new-branch-name>
+  # example:
+  git push --set-upstream origin 0.18.0-alkemio-2
+```
+
 ### Build and publish the new npm package:
-Find in json files any `'alkemio-XX'` and set the version you want to publish
+Find in json files any `'alkemio-X'` and set the version you want to publish
 ```
 yarn
 cd packages/excalidraw
