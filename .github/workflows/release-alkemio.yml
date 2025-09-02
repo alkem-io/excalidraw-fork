@@ -7,7 +7,7 @@ on:
       - reopened
 
 jobs:
-  Auto-release-excalidraw-next:
+  Auto-release-alkemio-package:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,4 +26,4 @@ jobs:
       - name: Auto release
         run: |
           yarn add @actions/core -W
-          yarn release --non-interactive
+          yarn autorelease
