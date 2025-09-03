@@ -2,7 +2,7 @@
 <p align="center"><a href="https://www.alkemio.org/" target="blank"><img src="https://alkem.io/logo.png" width="400" alt="Alkemio Logo" /></a></p>
 <p align="center"><i>Enabling society to collaborate. Building a better future, together.</i></p>
 
-# Alkemio fork of Excalidraw
+## Alkemio fork of Excalidraw
 
 ### List of differences with standard Excalidraw
 - Added ZoomToFit button to the zoom toolbar.
@@ -14,8 +14,8 @@
 - ~~Added `hideLibraryButton` to the appState to be able to hide the button from outside~~ not anymore
 
 ### Testing locally inside Alkemio client
-(needs to be reviewed, last time I tried this it didn't work well)
-```
+> Note: needs to be reviewed, last time I tried this it didn't work well
+```bash
 cd packages/excalidraw
 npm link
 cd ../../../client-web
@@ -25,7 +25,7 @@ npm link @alkemio/excalidraw --save
 ### Developing/debugging Excalidraw by itself
 Excalidraw comes with a test application which loads a whiteboard in the browser's local storage and renders just the Excalidraw component.
 It can be run at
-```
+```bash
 cd packages/excalidraw
 yarn
 yarn start
@@ -44,7 +44,7 @@ yarn start
 Everytime Excalidraw releases a new package, they publish it in their [GitHub/releases](https://github.com/excalidraw/excalidraw/releases) and they indicate in which commit they have based the release.
 
 
-```
+```bash
   git fetch --tags upstream
   git checkout master
   git pull
@@ -69,7 +69,7 @@ Create a Pull Request to develop in excalidraw-fork repository
 Find in json files any `'alkemio-X'` and make sure the version matches the number that should be published.
 `yarn:publish` is going to ask for the version number again and it can bump the number but you can just repeat the current version number if it's correct.
 
-```
+```bash
 yarn
 cd packages/excalidraw
 yarn install
