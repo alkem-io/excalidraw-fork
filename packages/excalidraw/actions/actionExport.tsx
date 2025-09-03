@@ -251,11 +251,10 @@ export const actionLoadScene = register({
   },
   perform: async (elements, appState, _, app) => {
     try {
-      const {
-        elements: loadedElements,
-        appState: loadedAppState,
-        files,
-      } = await loadFromJSON(appState, elements);
+      const { elements: loadedElements, files } = await loadFromJSON(
+        appState,
+        elements,
+      );
 
       app.addElementsFromPasteOrLibrary({
         elements: loadedElements,
@@ -265,9 +264,9 @@ export const actionLoadScene = register({
       });
 
       return {
-        elements: loadedElements,
-        appState: loadedAppState,
-        files,
+        elements: app.scene.getNonDeletedElements(),
+        appState: app.state,
+        files: app.files,
         captureUpdate: CaptureUpdateAction.IMMEDIATELY,
         replaceFiles: false,
       };
