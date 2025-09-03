@@ -28,6 +28,14 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Increase package version
+        run: |
+          cd packages/excalidraw
+          jq -r '.version' package.json | sed -E 's/(.*-)([0-9]+)$/echo "\1$((\2+1))"/e' | xargs -I {} jq '.version = "{}"' package.json > temp.json && mv temp.json package.json
+          git config user.name "github-actions"
+          git commit -am "chore: bump version to $(jq -r '.version' package.json)"
+          git push
+          cd ../..
       - name: Auto release
         run: |
           yarn
@@ -36,3 +44,4 @@ jobs:
           yarn build:esm
           yarn pack
           yarn publish --non-interactive --new-version $(jq -r '.version' package.json) --access public
+          cd ../..
