@@ -8,6 +8,8 @@ import { getShortcutFromShortcutName } from "../actions/shortcuts";
 import { probablySupportsClipboardBlob } from "../clipboard";
 import { t } from "../i18n";
 
+import { version } from "../package.json";
+
 import { Dialog } from "./Dialog";
 import { ExternalLinkIcon, GithubIcon, youtubeIcon } from "./icons";
 
@@ -59,6 +61,7 @@ const Header = () => (
 const Section = (props: { title: string; children: React.ReactNode }) => (
   <>
     <h3>{props.title}</h3>
+    <h6>{version}</h6>
     <div className="HelpDialog__islands-container">{props.children}</div>
   </>
 );

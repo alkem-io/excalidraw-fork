@@ -780,6 +780,7 @@ class App extends React.Component<AppProps, AppState> {
         setCursor: this.setCursor,
         resetCursor: this.resetCursor,
         updateFrameRendering: this.updateFrameRendering,
+        addElementsFromPasteOrLibrary: this.addElementsFromPasteOrLibrary,
         toggleSidebar: this.toggleSidebar,
         onChange: (cb) => this.onChangeEmitter.on(cb),
         onIncrement: (cb) => this.store.onStoreIncrementEmitter.on(cb),
@@ -3075,6 +3076,9 @@ class App extends React.Component<AppProps, AppState> {
       if (event && !isExcalidrawActive) {
         return;
       }
+      // These two lines are moved up by Alkemio to avoid pasting images json as text inside text elements
+      let file = event?.clipboardData?.files[0];
+      const data = await parseClipboard(event, isPlainPaste);
 
       const elementUnderCursor = document.elementFromPoint(
         this.lastViewportPosition.x,
@@ -3083,7 +3087,8 @@ class App extends React.Component<AppProps, AppState> {
       if (
         event &&
         (!(elementUnderCursor instanceof HTMLCanvasElement) ||
-          isWritableElement(target))
+          isWritableElement(target)) &&
+        !data.elements // If there are any elements, they will not be inserted as text
       ) {
         return;
       }
@@ -3096,11 +3101,6 @@ class App extends React.Component<AppProps, AppState> {
         this.state,
       );
 
-      // must be called in the same frame (thus before any awaits) as the paste
-      // event else some browsers (FF...) will clear the clipboardData
-      // (something something security)
-      let file = event?.clipboardData?.files[0];
-      const data = await parseClipboard(event, isPlainPaste);
       if (!file && !isPlainPaste) {
         if (data.mixedContent) {
           return this.addElementsFromMixedContentPaste(data.mixedContent, {

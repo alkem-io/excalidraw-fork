@@ -261,16 +261,24 @@ export const actionLoadScene = register({
   },
   perform: async (elements, appState, _, app) => {
     try {
-      const {
+      const { elements: loadedElements, files } = await loadFromJSON(
+        appState,
+        elements,
+      );
+
+      app.addElementsFromPasteOrLibrary({
         elements: loadedElements,
-        appState: loadedAppState,
         files,
-      } = await loadFromJSON(appState, elements);
+        position: "cursor",
+        fitToContent: true,
+      });
+
       return {
-        elements: loadedElements,
-        appState: loadedAppState,
-        files,
+        elements: app.scene.getNonDeletedElements(),
+        appState: app.state,
+        files: app.files,
         captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+        replaceFiles: false,
       };
     } catch (error: any) {
       if (error?.name === "AbortError") {

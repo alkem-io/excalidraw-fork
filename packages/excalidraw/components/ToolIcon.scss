@@ -18,6 +18,11 @@
     @include toolbarButtonColorStates;
   }
 
+  .ToolIcon.disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
   .ToolIcon--plain {
     background-color: transparent;
     .ToolIcon__icon {

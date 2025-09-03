@@ -18,7 +18,7 @@ import { ShapeCache } from "@excalidraw/element";
 
 import type { NonDeletedExcalidrawElement } from "@excalidraw/element/types";
 
-import { actionToggleStats } from "../actions";
+import { actionToggleElementLock, actionToggleStats } from "../actions";
 import { trackEvent } from "../analytics";
 import { isHandToolActive } from "../appState";
 import { TunnelsContext, useInitializeTunnels } from "../context/tunnels";
@@ -30,7 +30,6 @@ import { calculateScrollCenter } from "../scene";
 
 import { SelectedShapeActions, ShapesSwitcher } from "./Actions";
 import { LoadingMessage } from "./LoadingMessage";
-import { LockButton } from "./LockButton";
 import { MobileMenu } from "./MobileMenu";
 import { PasteChartDialog } from "./PasteChartDialog";
 import { Section } from "./Section";
@@ -61,6 +60,8 @@ import { LaserPointerButton } from "./LaserPointerButton";
 
 import "./LayerUI.scss";
 import "./Toolbar.scss";
+
+import { LockElementButton } from "./LockElementButton";
 
 import type { ActionManager } from "../actions/manager";
 
@@ -235,6 +236,15 @@ const LayerUI = ({
     </Section>
   );
 
+  const allElementsLocked = (elementsIds: string[]) => {
+    if (elementsIds.length === 0) {
+      return false;
+    }
+    return elements
+      .filter((element) => elementsIds.includes(element.id))
+      .every((element) => element.locked);
+  };
+
   const renderFixedSideContainer = () => {
     const shouldRenderSelectedShapeActions = showSelectedShapeActions(
       appState,
@@ -290,10 +300,20 @@ const LayerUI = ({
                               title={t("toolBar.penMode")}
                               penDetected={appState.penDetected}
                             />
-                            <LockButton
-                              checked={appState.activeTool.locked}
-                              onChange={onLockToggle}
-                              title={t("toolBar.lock")}
+                            <LockElementButton
+                              disabled={
+                                Object.keys(appState.selectedElementIds)
+                                  .length === 0
+                              }
+                              checked={allElementsLocked(
+                                Object.keys(appState.selectedElementIds),
+                              )}
+                              onChange={() =>
+                                actionManager.executeAction(
+                                  actionToggleElementLock,
+                                )
+                              }
+                              title={t("toolBar.lockElements")}
                             />
 
                             <div className="App-toolbar__divider" />

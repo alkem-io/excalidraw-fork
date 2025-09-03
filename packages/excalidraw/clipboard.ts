@@ -331,10 +331,10 @@ export const readSystemClipboard = async () => {
 /**
  * Parses "paste" ClipboardEvent.
  */
-const parseClipboardEventTextData = async (
+const parseClipboardEventTextData = (
   event: ClipboardEvent,
   isPlainPaste = false,
-): Promise<ParsedClipboardEventTextData> => {
+): ParsedClipboardEventTextData => {
   try {
     const mixedContent = !isPlainPaste && event && maybeParseHTMLPaste(event);
 
@@ -365,11 +365,11 @@ const parseClipboardEventTextData = async (
 /**
  * Attempts to parse clipboard event.
  */
-export const parseClipboard = async (
+export const parseClipboard = (
   event: ClipboardEvent,
   isPlainPaste = false,
-): Promise<ClipboardData> => {
-  const parsedEventData = await parseClipboardEventTextData(
+): ClipboardData => {
+  const parsedEventData = parseClipboardEventTextData(
     event,
     isPlainPaste,
   );
