@@ -81,8 +81,11 @@ Create a Pull Request to develop in excalidraw-fork repository
 - The package should appear in [npmjs](https://www.npmjs.com/package/@alkemio/excalidraw) shortly
 - Create a PR on the client using the new package
 
+##### GitHub and NPM configuration for the automatic publishing
+- A npm a access token has been added to the project's secrets to allow the github action publishing the package.
+- The npm access token is of type Classic > Automation, then added to the repository Settings > Secrets, called `NPM_TOKEN`.
 
-### Manually build and publish the new npm package locally (❌ see before, the preferred method)
+### Manually build locally and publish the new npm package (❌ see before, the preferred method)
 Verify in `packages/excalidraw/package.json` the version of the package to be published `'alkemio-X'` and make sure the version matches the number that should be published.
 `yarn:publish` is going to ask for the version number again and it can bump the number but you can just repeat the current version number if it's correct.
 
