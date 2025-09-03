@@ -1,46 +1,28 @@
 name: Release Alkemio package
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+  release:
+    types: [published]
 permissions:
   id-token: write  # Required for OIDC
   contents: read
 
 jobs:
   Auto-release-alkemio-package:
-    if: github.event.commits[-1].author.email != '41898282+github-actions[bot]@users.noreply.github.com'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.head_ref }}
           fetch-depth: 2
-      - name: Setup Node.js 18.x
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
-      - name: Update npm
-        run: npm install -g npm@latest
       - name: Set up publish access
         run: |
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Increase package version
-        run: |
-          cd packages/excalidraw
-          date > generated.txt
-          jq -r '.version' package.json | sed -E 's/(.*-)([0-9]+)$/echo "\1$((\2+1))"/e' | xargs -I {} jq '.version = "{}"' package.json > temp.json && mv temp.json package.json
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git add .
-          git commit -m "[BOT]: Bump version to $(jq -r '.version' package.json)"
-          git push
-          cd ../..
       - name: Auto release
         run: |
           yarn
