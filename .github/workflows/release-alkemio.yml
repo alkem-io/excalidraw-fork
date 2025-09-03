@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   Auto-release-alkemio-package:
+    if: github.event.commits[-1].author.email != 'alkem-io@github.com'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +34,7 @@ jobs:
           cd packages/excalidraw
           jq -r '.version' package.json | sed -E 's/(.*-)([0-9]+)$/echo "\1$((\2+1))"/e' | xargs -I {} jq '.version = "{}"' package.json > temp.json && mv temp.json package.json
           git config user.name "github-actions"
+          git config user.email "alkem-io@github.com"
           git commit -am "chore: bump version to $(jq -r '.version' package.json)"
           git push
           cd ../..
