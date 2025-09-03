@@ -25,5 +25,9 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Auto release
         run: |
-          yarn add @actions/core -W
-          yarn autorelease
+          yarn
+          cd packages/excalidraw
+          yarn install
+          yarn build:esm
+          yarn pack
+          yarn publish --new-version $(jq -r '.version' package.json) --access public
