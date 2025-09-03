@@ -31,18 +31,17 @@ yarn
 yarn start
 ```
 
-### Notes
-- For our packages, we are using the Excalidraw's released version + our customizations.
-- Our changes are in `develop` branch.
-- Latest released package is also `develop` branch, we merge to develop after each of our releases.
-- `master` brach is the original code from Excalidraw as-is. By the time of writing this readme, is unstable and shouldn't be released to production.
-- Some tags are kept in the repo from versions released
-- To the released version number we add the suffix `-alkemio-X` being X the number of our release based on this same Excalidraw's releases, normally just `-alkemio-1`.
+### Developer Notes
+- All our modifications are merged to `develop` branch.
+- `master` branch is the original Excalidraw's `master` branch as is. By the time of writing this readme, it is unstable and shouldn't be released to production.
+- Some tags are kept in the repo from versions released, but before version 0.18 we were not following the instructions in this Readme
+- The version naming is as follows: vX.X.X-HHHHH-alkemio-R. Being X the original version of the Excalidraw's package, HHHHH the hash of the last commit of the applied (if any, normally we just release the Excalidraw's released commit, so this HHHHH is omitted), and R is the counter of released Alkemio packages.
 
 
 ### Upgrade procedure
 Everytime Excalidraw releases a new package, they publish it in their [GitHub/releases](https://github.com/excalidraw/excalidraw/releases) and they indicate in which commit they have based the release.
-
+For example release 0.18.0 is based on commit 817d8c553c3389650f8b4503984a6d4a5d2f0c11
+If we want to base our release on a later commit applied in their master branch, we also can, but we have made the agreement of appending that hash to the package name (see point before -HHHHH-)
 
 ```bash
   git fetch --tags upstream
@@ -50,22 +49,30 @@ Everytime Excalidraw releases a new package, they publish it in their [GitHub/re
   git pull
   git checkout -b <new-branch-name> <commit-hash>
   # example:
-  # git checkout -b 0.18.0-alkemio-2 817d8c553c3389650f8b4503984a6d4a5d2f0c11  (taken from Excalidraw's GitHub releases page)
+  # git checkout -b 0.18.0-alkemio-8 817d8c553c3389650f8b4503984a6d4a5d2f0c11  (taken from Excalidraw's GitHub releases page)
 
   # Then merge the Alkemio changes from our branch: develop
   git merge origin/develop
   # Solve the conflicts.
   # Make sure packages/excalidraw/package.json has the correct package version number.
-  # example: 0.18.0-alkemio-2
+  # 0.18.0 Same as the Excalidraw's released package where we base our release
+  # -817d8c5 The commit hash, if we want to apply any later commits merged after the Excalidraw's release
+  # example: 0.18.0-alkemio-8
+  #      or: 0.18.0-817d8c5-alkemio-8
 
   # Then push
   git push --set-upstream origin <new-branch-name>
-  # example:
-  git push --set-upstream origin 0.18.0-alkemio-2
+  # example: git push --set-upstream origin 0.18.0-alkemio-8
 ```
 Create a Pull Request to develop in excalidraw-fork repository
 
-### Build and publish the new npm package:
+### Automatic build and publish the new npm package (preferred method)
+- Create a new Release in the [releases page](https://github.com/alkem-io/excalidraw-fork/releases)
+-
+
+
+
+### Manually build and publish the new npm package locally
 Find in json files any `'alkemio-X'` and make sure the version matches the number that should be published.
 `yarn:publish` is going to ask for the version number again and it can bump the number but you can just repeat the current version number if it's correct.
 
