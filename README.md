@@ -31,18 +31,17 @@ yarn
 yarn start
 ```
 
-### Notes
-- For our packages, we are using the Excalidraw's released version + our customizations.
-- Our changes are in `develop` branch.
-- Latest released package is also `develop` branch, we merge to develop after each of our releases.
-- `master` brach is the original code from Excalidraw as-is. By the time of writing this readme, is unstable and shouldn't be released to production.
-- Some tags are kept in the repo from versions released
-- To the released version number we add the suffix `-alkemio-X` being X the number of our release based on this same Excalidraw's releases, normally just `-alkemio-1`.
+### Developer Notes
+- All our modifications are merged to `develop` branch.
+- `master` branch is the original Excalidraw's `master` branch as is. By the time of writing this readme, it is unstable and shouldn't be released to production.
+- Some tags and branches are kept in the repo from previous versions released, but before version 0.18.0 we were not following the instructions in this Readme, so things may be inconsistent.
+- The version naming is as follows: vX.X.X-HHHHH-alkemio-R. Being X the original version of the Excalidraw's package, HHHHH the hash of the last commit applied (if any, normally we just release the Excalidraw's released commit, so this HHHHH is omitted), and R is the counter of released Alkemio packages.
 
 
 ### Upgrade procedure
-Everytime Excalidraw releases a new package, they publish it in their [GitHub/releases](https://github.com/excalidraw/excalidraw/releases) and they indicate in which commit they have based the release.
-
+Everytime Excalidraw releases a new package, they publish it in their [GitHub/releases](https://github.com/excalidraw/excalidraw/releases), Github indicates in which commit they have based the release.
+For example release 0.18.0 is based on commit 817d8c553c3389650f8b4503984a6d4a5d2f0c11
+If we want to base our release on a later commit applied in their master branch, we also can, but we have made the agreement of appending that hash to the package name (that's the appended hash -HHHHH-)
 
 ```bash
   git fetch --tags upstream
@@ -50,23 +49,44 @@ Everytime Excalidraw releases a new package, they publish it in their [GitHub/re
   git pull
   git checkout -b <new-branch-name> <commit-hash>
   # example:
-  # git checkout -b 0.18.0-alkemio-2 817d8c553c3389650f8b4503984a6d4a5d2f0c11  (taken from Excalidraw's GitHub releases page)
+  # git checkout -b 0.18.0-alkemio-8 817d8c553c3389650f8b4503984a6d4a5d2f0c11  (taken from Excalidraw's GitHub releases page, or a later commit to their master branch)
 
   # Then merge the Alkemio changes from our branch: develop
   git merge origin/develop
   # Solve the conflicts.
   # Make sure packages/excalidraw/package.json has the correct package version number.
-  # example: 0.18.0-alkemio-2
+  # Increase the suffix for example: -alkemio-8 => -alkemio-9
+  # 0.18.0 Same as the Excalidraw's released package where we base our release
+  # -817d8c5 The commit hash, if we want to apply any later commits merged after the Excalidraw's release
+  # example: 0.18.0-alkemio-8
+  #      or: 0.18.0-817d8c5-alkemio-8
+
+  git commit -am "Alkemio Release <new-branch-name>"
+  # example: git commit -am "Alkemio Release 0.18.0-alkemio-8"
 
   # Then push
   git push --set-upstream origin <new-branch-name>
-  # example:
-  git push --set-upstream origin 0.18.0-alkemio-2
+  # example: git push -u origin 0.18.0-alkemio-8
 ```
+
 Create a Pull Request to develop in excalidraw-fork repository
 
-### Build and publish the new npm package:
-Find in json files any `'alkemio-X'` and make sure the version matches the number that should be published.
+### Automatic build and publish the new npm package (✅ preferred method)
+- Create a new Release in the [releases page](https://github.com/alkem-io/excalidraw-fork/releases)
+  - Select the pushed branch and create a tag accordingly
+  - Set the title to `Release <new-branch-name>`
+  - Auto generate release notes
+  - Publish the release
+- The [action](https://github.com/alkem-io/excalidraw-fork/actions) should run automatically
+- The package should appear in [npmjs](https://www.npmjs.com/package/@alkemio/excalidraw) shortly
+- Create a PR on the client using the new package
+
+##### GitHub and NPM configuration for the automatic publishing
+- A npm a access token has been added to the project's secrets to allow the github action publishing the package.
+- The npm access token is of type Classic > Automation, then added to the repository Settings > Secrets, called `NPM_TOKEN`.
+
+### Manually build locally and publish the new npm package (❌ see before, the preferred method)
+Verify in `packages/excalidraw/package.json` the version of the package to be published `'alkemio-X'` and make sure the version matches the number that should be published.
 `yarn:publish` is going to ask for the version number again and it can bump the number but you can just repeat the current version number if it's correct.
 
 ```bash
@@ -79,6 +99,9 @@ yarn publish
 ```
 
 ## Change Log
+### v0.18.0-864353b-alkemio-8
+- Released a new package because the previous one (plain 0.18.0) was not compatible with React 19.
+
 ### v0.18.0-alkemio-2
 - Removed unused customizations (zoomToFit and hideLibraryButton)
 - Cleaned up Readme and made version updates easier
@@ -201,6 +224,9 @@ yarn publish
   <a href="https://discord.gg/UexuTaE">
     <img alt="Chat on Discord" src="https://img.shields.io/discord/723672430744174682?color=738ad6&label=Chat%20on%20Discord&logo=discord&logoColor=ffffff&widge=false"/>
   </a>
+  <a href="https://deepwiki.com/excalidraw/excalidraw">
+    <img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" />
+  </a>
   <a href="https://twitter.com/excalidraw">
     <img alt="Follow Excalidraw on Twitter" src="https://img.shields.io/twitter/follow/excalidraw.svg?label=follow+@excalidraw&style=social&logo=twitter"/>
   </a>
@@ -230,7 +256,7 @@ The Excalidraw editor (npm package) supports:
 - 🏗️&nbsp;Customizable.
 - 📷&nbsp;Image support.
 - 😀&nbsp;Shape libraries support.
-- 👅&nbsp;Localization (i18n) support.
+- 🌐&nbsp;Localization (i18n) support.
 - 🖼️&nbsp;Export to PNG, SVG & clipboard.
 - 💾&nbsp;Open format - export drawings as an `.excalidraw` json file.
 - ⚒️&nbsp;Wide range of tools - rectangle, circle, diamond, arrow, line, free-draw, eraser...

@@ -1,12 +1,14 @@
 import React from "react";
-import { Excalidraw } from "../index";
-import { render, unmountComponent } from "../tests/test-utils";
-import { Keyboard, Pointer, UI } from "../tests/helpers/ui";
-import { KEYS } from "../keys";
-import { API } from "../tests/helpers/api";
+
+import { KEYS } from "@excalidraw/common";
+
 import { actionSelectAll } from "../actions";
 import { t } from "../i18n";
-import { mutateElement } from "../element/mutateElement";
+import { Excalidraw } from "../index";
+
+import { API } from "../tests/helpers/api";
+import { Keyboard, Pointer, UI } from "../tests/helpers/ui";
+import { render, unmountComponent } from "../tests/test-utils";
 
 unmountComponent();
 
@@ -70,7 +72,7 @@ describe("element locking", () => {
     expect(lockedRectangle).toEqual(expect.objectContaining({ x: 0, y: 0 }));
   });
 
-  it("you can drag element that's below a locked element", () => {
+  it("dragging element that's below a locked element", () => {
     const rectangle = API.createElement({
       type: "rectangle",
       width: 100,
@@ -91,6 +93,14 @@ describe("element locking", () => {
     mouse.moveTo(100, 100);
     mouse.upAt(100, 100);
     expect(lockedRectangle).toEqual(expect.objectContaining({ x: 0, y: 0 }));
+    expect(rectangle).toEqual(expect.objectContaining({ x: 0, y: 0 }));
+
+    // once selected, the locked element above should be ignored
+    API.setSelectedElements([rectangle]);
+    mouse.downAt(50, 50);
+    mouse.moveTo(100, 100);
+    mouse.upAt(100, 100);
+    expect(lockedRectangle).toEqual(expect.objectContaining({ x: 0, y: 0 }));
     expect(rectangle).toEqual(expect.objectContaining({ x: 50, y: 50 }));
     expect(API.getSelectedElements().length).toBe(1);
     expect(API.getSelectedElement().id).toBe(rectangle.id);
@@ -105,7 +115,7 @@ describe("element locking", () => {
     expect(API.getSelectedElements().length).toBe(1);
   });
 
-  it("clicking on a locked element should select the unlocked element beneath it", () => {
+  it("clicking on a locked element should not select the unlocked element beneath it", () => {
     const rectangle = API.createElement({
       type: "rectangle",
       width: 100,
@@ -123,8 +133,8 @@ describe("element locking", () => {
     API.setElements([rectangle, lockedRectangle]);
     expect(API.getSelectedElements().length).toBe(0);
     mouse.clickAt(50, 50);
-    expect(API.getSelectedElements().length).toBe(1);
-    expect(API.getSelectedElement().id).toBe(rectangle.id);
+    expect(API.getSelectedElements().length).toBe(0);
+    expect(h.state.activeLockedId).toBe(lockedRectangle.id);
   });
 
   it("right-clicking on a locked element should select it & open its contextMenu", () => {
@@ -294,7 +304,7 @@ describe("element locking", () => {
       height: textSize,
       containerId: container.id,
     });
-    mutateElement(container, {
+    h.app.scene.mutateElement(container, {
       boundElements: [{ id: text.id, type: "text" }],
     });
 
@@ -335,7 +345,7 @@ describe("element locking", () => {
       containerId: container.id,
       locked: true,
     });
-    mutateElement(container, {
+    h.app.scene.mutateElement(container, {
       boundElements: [{ id: text.id, type: "text" }],
     });
     API.setElements([container, text]);
@@ -369,7 +379,7 @@ describe("element locking", () => {
       containerId: container.id,
       locked: true,
     });
-    mutateElement(container, {
+    h.app.scene.mutateElement(container, {
       boundElements: [{ id: text.id, type: "text" }],
     });
     API.setElements([container, text]);
