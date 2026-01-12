@@ -10,6 +10,7 @@ import {
 } from "../Actions";
 import { useDevice } from "../App";
 import { HelpButton } from "../HelpButton";
+import { ReactionModeButton } from "../ReactionModeButton";
 import { Section } from "../Section";
 import Stack from "../Stack";
 
@@ -21,11 +22,15 @@ const Footer = ({
   actionManager,
   showExitZenModeBtn,
   renderWelcomeScreen,
+  onToggleReactionMode,
+  reactionModeActive,
 }: {
   appState: UIAppState;
   actionManager: ActionManager;
   showExitZenModeBtn: boolean;
   renderWelcomeScreen: boolean;
+  onToggleReactionMode?: () => void;
+  reactionModeActive?: boolean;
 }) => {
   const { FooterCenterTunnel, WelcomeScreenHelpHintTunnel } = useTunnels();
 
@@ -80,9 +85,21 @@ const Footer = ({
       >
         <div style={{ position: "relative" }}>
           {renderWelcomeScreen && <WelcomeScreenHelpHintTunnel.Out />}
-          <HelpButton
-            onClick={() => actionManager.executeAction(actionShortcuts)}
-          />
+          {/* Small inline button for compact view */}
+          <div className="footer-controls">
+            <HelpButton
+              onClick={() => actionManager.executeAction(actionShortcuts)}
+            />
+          </div>
+          {/* Floating large FAB for easier access (absolute positioned) */}
+          <div className="reaction-fab-wrapper">
+            <ReactionModeButton
+              active={!!reactionModeActive}
+              onClick={onToggleReactionMode || (() => {})}
+              size="large"
+              label="React with an emoji"
+            />
+          </div>
         </div>
       </div>
       <ExitZenModeAction

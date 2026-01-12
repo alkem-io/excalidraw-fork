@@ -1,6 +1,48 @@
 @import "open-color/open-color";
 @import "../css/variables.module.scss";
 
+/* Reactions UI */
+.emoji-picker-panel {
+  background-color: var(--color-surface-lowest);
+  border: 1px solid var(--default-border-color);
+  box-shadow: var(--shadow-island);
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.emoji-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 36px);
+  gap: 6px;
+}
+.emoji-picker-btn {
+  width: 36px;
+  height: 36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+  background:transparent;
+  border: none;
+  cursor: pointer;
+}
+.emoji-picker-btn:hover { background: rgba(0,0,0,0.04); }
+.floating-emoji {
+  will-change: transform, opacity;
+}
+.reaction-badge {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.reaction-badge-count {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+
 .excalidraw {
   .layer-ui__wrapper.animate {
     transition: width 0.1s ease-in-out;
@@ -114,6 +156,85 @@
     .layer-ui__wrapper__footer-right {
       margin-top: auto;
       margin-bottom: auto;
+    }
+
+    /* Reaction FAB styles */
+    .reaction-fab-wrapper {
+      position: fixed;
+      --reaction-fab-right: 24px;
+      --reaction-fab-bottom: 96px; /* moved up to avoid overlapping footer elements */
+      right: var(--reaction-fab-right);
+      bottom: var(--reaction-fab-bottom);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: bottom 0.15s ease;
+    }
+
+    @media (max-width: 640px) {
+      .reaction-fab-wrapper {
+        --reaction-fab-right: 16px;
+        --reaction-fab-bottom: 80px;
+      }
+    }
+
+    .ReactionModeButton {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .ReactionModeButton__emoji {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .ReactionModeButton--large {
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      background: var(--bg-button, #fff);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ReactionModeButton--large .ReactionModeButton__label {
+      display: none;
+    }
+
+    .ReactionModeButton--active.ReactionModeButton--large {
+      background: #E0DFFF;
+      color: var(--text-primary-color);
+    }
+
+    .footer-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .reaction-coachmark__bubble {
+      background: var(--island-bg-color);
+      border: 1px solid var(--default-border-color);
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      font-family: var(--ui-font);
+      font-size: 13px;
+    }
+
+    .emoji-picker-wrapper--fab {
+      position: fixed;
+      right: calc(var(--reaction-fab-right) - 8px);
+      bottom: calc(var(--reaction-fab-bottom) + 8px);
+      z-index: 3000;
+      pointer-events: auto;
     }
   }
 }
