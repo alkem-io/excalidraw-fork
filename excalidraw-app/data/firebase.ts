@@ -42,15 +42,18 @@ import type { Socket } from "socket.io-client";
 // -----------------------------------------------------------------------------
 
 let FIREBASE_CONFIG: Record<string, any>;
-try {
-  FIREBASE_CONFIG = JSON.parse(import.meta.env.VITE_APP_FIREBASE_CONFIG);
-} catch (error: any) {
-  console.warn(
-    `Error JSON parsing firebase config. Supplied value: ${
-      import.meta.env.VITE_APP_FIREBASE_CONFIG
-    }`,
-  );
+const FIREBASE_CONFIG_RAW = import.meta.env.VITE_APP_FIREBASE_CONFIG;
+if (!FIREBASE_CONFIG_RAW) {
   FIREBASE_CONFIG = {};
+} else {
+  try {
+    FIREBASE_CONFIG = JSON.parse(FIREBASE_CONFIG_RAW);
+  } catch (error: any) {
+    console.warn(
+      `Error JSON parsing firebase config. Supplied value: ${FIREBASE_CONFIG_RAW}`,
+    );
+    FIREBASE_CONFIG = {};
+  }
 }
 
 let firebaseApp: ReturnType<typeof initializeApp> | null = null;

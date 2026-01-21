@@ -701,6 +701,12 @@ class App extends React.Component<AppProps, AppState> {
     ]
   >();
   onUserFollowEmitter = new Emitter<[payload: OnUserFollowedPayload]>();
+
+  // Incoming ephemeral UI events (floating emojis)
+  onIncomingFloatingEmojiEmitter = new Emitter<[
+    payload: { id: string; emoji: string; x: number; y: number },
+  ]>();
+
   onScrollChangeEmitter = new Emitter<
     [scrollX: number, scrollY: number, zoom: AppState["zoom"]]
   >();
@@ -788,6 +794,8 @@ class App extends React.Component<AppProps, AppState> {
         onPointerUp: (cb) => this.onPointerUpEmitter.on(cb),
         onScrollChange: (cb) => this.onScrollChangeEmitter.on(cb),
         onUserFollow: (cb) => this.onUserFollowEmitter.on(cb),
+        onIncomingFloatingEmoji: (cb) => this.onIncomingFloatingEmojiEmitter.on(cb),
+        dispatchIncomingFloatingEmoji: (payload) => this.onIncomingFloatingEmojiEmitter.trigger(payload),
       } as const;
       if (typeof excalidrawAPI === "function") {
         excalidrawAPI(api);

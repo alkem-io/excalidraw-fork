@@ -88,6 +88,7 @@ import { collabErrorIndicatorAtom } from "./CollabError";
 import Portal from "./Portal";
 
 import type {
+  SocketUpdateData,
   SocketUpdateDataSource,
   SyncableExcalidrawElement,
 } from "../data";
@@ -120,6 +121,8 @@ export interface CollabAPI {
   getUsername: CollabInstance["getUsername"];
   getActiveRoomLink: CollabInstance["getActiveRoomLink"];
   setCollabError: CollabInstance["setErrorDialog"];
+  // Broadcast ephemeral UI events
+  broadcastFloatingEmoji: CollabInstance["broadcastFloatingEmoji"];
 }
 
 interface CollabProps {
@@ -201,6 +204,27 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
   private onUmmount: (() => void) | null = null;
 
+  // Broadcast an ephemeral floating emoji to other clients (volatile)
+  broadcastFloatingEmoji = async (emoji: string, x: number, y: number) => {
+    try {
+      const data = {
+        type: WS_SUBTYPES.FLOATING_EMOJI,
+        payload: {
+          emoji,
+          x,
+          y,
+          id: `${this.portal.roomId}_${Date.now()}`,
+        },
+      } as SocketUpdateData;
+      // use reliable channel so reactions always land for all peers
+      await this.portal._broadcastSocketData(data, false);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Confetti broadcasting removed
+
   componentDidMount() {
     window.addEventListener(EVENT.BEFORE_UNLOAD, this.beforeUnload);
     window.addEventListener("online", this.onOfflineStatusToggle);
@@ -223,7 +247,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
     this.onOfflineStatusToggle();
 
-    const collabAPI: CollabAPI = {
+    const collabAPI = {
       isCollaborating: this.isCollaborating,
       onPointerUpdate: this.onPointerUpdate,
       startCollaboration: this.startCollaboration,
@@ -234,7 +258,9 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       getUsername: this.getUsername,
       getActiveRoomLink: this.getActiveRoomLink,
       setCollabError: this.setErrorDialog,
-    };
+      // ephemeral broadcasts
+      broadcastFloatingEmoji: this.broadcastFloatingEmoji,
+    } as CollabAPI;
 
     appJotaiStore.set(collabAPIAtom, collabAPI);
 
@@ -643,6 +669,22 @@ class Collab extends PureComponent<CollabProps, CollabState> {
               }).appState,
             });
 
+            break;
+          }
+
+          case WS_SUBTYPES.FLOATING_EMOJI: {
+            try {
+              const { emoji, x, y, id } = decryptedData.payload;
+              // forward to Excalidraw to display (optional subscriber)
+              this.excalidrawAPI?.dispatchIncomingFloatingEmoji?.({
+                id: id || `${decryptedData.type}_${Date.now()}`,
+                emoji,
+                x,
+                y,
+              });
+            } catch (e) {
+              console.error(e);
+            }
             break;
           }
 
