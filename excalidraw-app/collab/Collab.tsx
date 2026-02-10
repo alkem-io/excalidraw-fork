@@ -245,7 +245,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
     this.onOfflineStatusToggle();
 
-    const collabAPI = {
+    const collabAPI: CollabAPI = {
       isCollaborating: this.isCollaborating,
       onPointerUpdate: this.onPointerUpdate,
       startCollaboration: this.startCollaboration,
@@ -256,9 +256,8 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       getUsername: this.getUsername,
       getActiveRoomLink: this.getActiveRoomLink,
       setCollabError: this.setErrorDialog,
-      // ephemeral broadcasts
       broadcastFloatingEmoji: this.broadcastFloatingEmoji,
-    } as CollabAPI;
+    };
 
     appJotaiStore.set(collabAPIAtom, collabAPI);
 

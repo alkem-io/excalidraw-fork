@@ -503,10 +503,6 @@ const LayerUI = ({
     });
   }, [reactionEmoji, showReactionCoach]);
 
-  const triggerConfetti = useCallback(() => {
-    // Confetti removed — no-op
-  }, []);
-
   const TunnelsJotaiProvider = tunnels.tunnelsJotai.Provider;
 
   const [eyeDropperState, setEyeDropperState] = useAtom(activeEyeDropperAtom);
