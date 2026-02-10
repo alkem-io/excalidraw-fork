@@ -92,9 +92,12 @@ class Portal {
       const encoded = new TextEncoder().encode(json);
       const { encryptedBuffer, iv } = await encryptData(this.roomKey!, encoded);
 
-      // prefer reliable channel; only use volatile when explicitly requested
-      const event = volatile ? WS_EVENTS.SERVER_VOLATILE : WS_EVENTS.SERVER;
-      this.socket?.emit(event, roomId ?? this.roomId, encryptedBuffer, iv);
+      this.socket?.emit(
+        volatile ? WS_EVENTS.SERVER_VOLATILE : WS_EVENTS.SERVER,
+        roomId ?? this.roomId,
+        encryptedBuffer,
+        iv,
+      );
     }
   }
 

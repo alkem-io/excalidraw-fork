@@ -612,8 +612,11 @@ export interface ExcalidrawProps {
   onUserFollow?: (payload: OnUserFollowedPayload) => void;
 
   /** Request host app to broadcast a floating emoji at a scene point (if collab is enabled) */
-  onRequestBroadcastFloatingEmoji?: (emoji: string, x: number, y: number) => void;
-  /** Confetti feature removed */
+  onRequestBroadcastFloatingEmoji?: (
+    emoji: string,
+    x: number,
+    y: number,
+  ) => void;
 
   children?: React.ReactNode;
   validateEmbeddable?:
@@ -742,7 +745,6 @@ export type AppClassProperties = {
 
   onPointerUpEmitter: App["onPointerUpEmitter"];
   onIncomingFloatingEmojiEmitter: App["onIncomingFloatingEmojiEmitter"];
-  // onIncomingConfettiEmitter: App["onIncomingConfettiEmitter"];
   updateEditorAtom: App["updateEditorAtom"];
 };
 
@@ -843,7 +845,9 @@ export interface ExcalidrawImperativeAPI {
    * used in conjunction with view mode (props.viewModeEnabled).
    */
   updateFrameRendering: InstanceType<typeof App>["updateFrameRendering"];
-  addElementsFromPasteOrLibrary: InstanceType<typeof App>["addElementsFromPasteOrLibrary"];
+  addElementsFromPasteOrLibrary: InstanceType<
+    typeof App
+  >["addElementsFromPasteOrLibrary"];
   onChange: (
     callback: (
       elements: readonly ExcalidrawElement[],
@@ -876,11 +880,19 @@ export interface ExcalidrawImperativeAPI {
   ) => UnsubscribeCallback;
   // Incoming ephemeral UI events: floating emoji (from collab). Coordinates are scene/whiteboard coords.
   onIncomingFloatingEmoji: (
-    callback: (payload: { id: string; emoji: string; x: number; y: number }) => void,
+    callback: (payload: {
+      id: string;
+      emoji: string;
+      x: number;
+      y: number;
+    }) => void,
   ) => UnsubscribeCallback;
-  dispatchIncomingFloatingEmoji: (
-    payload: { id: string; emoji: string; x: number; y: number },
-  ) => void;
+  dispatchIncomingFloatingEmoji: (payload: {
+    id: string;
+    emoji: string;
+    x: number;
+    y: number;
+  }) => void;
 }
 
 export type Device = Readonly<{

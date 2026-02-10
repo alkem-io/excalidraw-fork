@@ -1,7 +1,5 @@
 import clsx from "clsx";
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { FloatingEmoji } from "./FloatingEmoji";
-import { EmojiPickerPanel } from "./EmojiPickerPanel";
 
 import {
   CLASSES,
@@ -32,6 +30,9 @@ import { useAtom, useAtomValue } from "../editor-jotai";
 
 import { t } from "../i18n";
 import { calculateScrollCenter } from "../scene";
+
+import { EmojiPickerPanel } from "./EmojiPickerPanel";
+import { FloatingEmoji } from "./FloatingEmoji";
 
 import { SelectedShapeActions, ShapesSwitcher } from "./Actions";
 import { LoadingMessage } from "./LoadingMessage";
@@ -175,10 +176,11 @@ const LayerUI = ({
   const lastToggleTimeRef = useRef<number>(0);
   const [overlayDisabled, setOverlayDisabled] = useState(false);
   const overlayDisableTimeoutRef = useRef<number | null>(null);
-  const [pickerPos, setPickerPos] = useState<{ left: number; bottom: number } | null>(null);
+  const [pickerPos, setPickerPos] = useState<{
+    left: number;
+    bottom: number;
+  } | null>(null);
   const [overlayBottomCutout, setOverlayBottomCutout] = useState<number>(60);
-
-  
 
   // Subscribe to incoming ephemeral UI events from collab
   useEffect(() => {
@@ -279,7 +281,9 @@ const LayerUI = ({
 
     const compute = () => {
       try {
-        const fab = document.querySelector<HTMLElement>(".reaction-fab-wrapper");
+        const fab = document.querySelector<HTMLElement>(
+          ".reaction-fab-wrapper",
+        );
         if (fab) {
           const rect = fab.getBoundingClientRect();
           // Make overlay stop above the FAB (with a small gap).
@@ -304,7 +308,9 @@ const LayerUI = ({
 
   const spawnEmoji = useCallback(
     (clientX: number, clientY: number) => {
-      if (!reactionEmoji) return;
+      if (!reactionEmoji) {
+        return;
+      }
       const id = Math.random().toString(36).slice(2);
       const emoji = reactionEmoji;
 
@@ -411,7 +417,11 @@ const LayerUI = ({
         if (!pending) {
           return;
         }
-        forwardPointerUpdate(pending.clientX, pending.clientY, pending.pointerId);
+        forwardPointerUpdate(
+          pending.clientX,
+          pending.clientY,
+          pending.pointerId,
+        );
       });
     },
     [forwardPointerUpdate],
@@ -438,7 +448,7 @@ const LayerUI = ({
     }
   }, [reactionModeActive]);
 
-    const toggleReactionMode = useCallback(() => {
+  const toggleReactionMode = useCallback(() => {
     try {
       lastToggleTimeRef.current = performance.now();
     } catch (err) {}
@@ -453,48 +463,45 @@ const LayerUI = ({
     }, 350) as unknown as number;
 
     setReactionModeActive((active) => {
-        // turn off
-        if (active) {
-          setReactionEmoji(null);
-          setShowEmojiPicker(false);
-          if (!isTestEnv()) {
-            try {
-              localStorage.setItem("excalidraw.reactionModeActive", "false");
-            } catch (err) {}
-          }
-          return false;
-        }
-
-        // turn on but no emoji selected -> open picker first
-        if (!reactionEmoji) {
-          setShowEmojiPicker(true);
-          if (!isTestEnv()) {
-            try {
-              localStorage.setItem("excalidraw.reactionModeActive", "false");
-            } catch (err) {}
-          }
-          return false;
-        }
-
-        // turn on with emoji selected
+      // turn off
+      if (active) {
+        setReactionEmoji(null);
+        setShowEmojiPicker(false);
         if (!isTestEnv()) {
           try {
-            localStorage.setItem("excalidraw.reactionModeActive", "true");
-            if (showReactionCoach) {
-              localStorage.setItem(
-                "excalidraw.reactionModeCoachSeen",
-                "true",
-              );
-              setShowReactionCoach(false);
-            }
-          } catch (err) {}
+            localStorage.setItem("excalidraw.reactionModeActive", "false");
+          } catch (err) { }
         }
+        return false;
+      }
+
+      // turn on but no emoji selected -> open picker first
+      if (!reactionEmoji) {
+        setShowEmojiPicker(true);
+        if (!isTestEnv()) {
+          try {
+            localStorage.setItem("excalidraw.reactionModeActive", "false");
+          } catch (err) { }
+        }
+        return false;
+      }
+
+      // turn on with emoji selected
+      if (!isTestEnv()) {
         try {
-          lastToggleTimeRef.current = performance.now();
-        } catch (err) {}
-        return true;
-      });
-    }, [reactionEmoji, showReactionCoach]);
+          localStorage.setItem("excalidraw.reactionModeActive", "true");
+          if (showReactionCoach) {
+            localStorage.setItem("excalidraw.reactionModeCoachSeen", "true");
+            setShowReactionCoach(false);
+          }
+        } catch (err) { }
+      }
+      try {
+        lastToggleTimeRef.current = performance.now();
+      } catch (err) { }
+      return true;
+    });
+  }, [reactionEmoji, showReactionCoach]);
 
   const triggerConfetti = useCallback(() => {
     // Confetti removed — no-op
@@ -921,17 +928,28 @@ const LayerUI = ({
                   pointerEvents: overlayDisabled ? "none" : "auto",
                 }}
                 onPointerMove={(e) => {
-                  scheduleForwardPointerUpdate(e.clientX, e.clientY, e.pointerId);
+                  scheduleForwardPointerUpdate(
+                    e.clientX,
+                    e.clientY,
+                    e.pointerId,
+                  );
                 }}
                 onPointerDown={(e) => {
                   // ignore pointerdowns that are inside the FAB area (user likely clicked FAB)
                   try {
-                    const fab = document.querySelector<HTMLElement>(".reaction-fab-wrapper");
+                    const fab = document.querySelector<HTMLElement>(
+                      ".reaction-fab-wrapper",
+                    );
                     if (fab) {
                       const r = fab.getBoundingClientRect();
                       const x = e.clientX;
                       const y = e.clientY;
-                      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                      if (
+                        x >= r.left &&
+                        x <= r.right &&
+                        y >= r.top &&
+                        y <= r.bottom
+                      ) {
                         return;
                       }
                     }
@@ -947,7 +965,11 @@ const LayerUI = ({
                   } catch (err) {}
 
                   reactionCursorButtonRef.current = "down";
-                  scheduleForwardPointerUpdate(e.clientX, e.clientY, e.pointerId);
+                  scheduleForwardPointerUpdate(
+                    e.clientX,
+                    e.clientY,
+                    e.pointerId,
+                  );
 
                   e.stopPropagation();
                   spawnEmoji(e.clientX, e.clientY);
@@ -959,11 +981,19 @@ const LayerUI = ({
                       lastSpawnRef.current = now;
                     }
 
-                    scheduleForwardPointerUpdate(ev.clientX, ev.clientY, ev.pointerId);
+                    scheduleForwardPointerUpdate(
+                      ev.clientX,
+                      ev.clientY,
+                      ev.pointerId,
+                    );
                   };
                   const up = (ev: PointerEvent) => {
                     reactionCursorButtonRef.current = "up";
-                    scheduleForwardPointerUpdate(ev.clientX, ev.clientY, ev.pointerId);
+                    scheduleForwardPointerUpdate(
+                      ev.clientX,
+                      ev.clientY,
+                      ev.pointerId,
+                    );
                     window.removeEventListener("pointermove", move);
                     window.removeEventListener("pointerup", up);
                   };
@@ -1067,29 +1097,6 @@ const LayerUI = ({
               />
             );
           })}
-
-          {/* Confetti feature removed */}
-          {/* Reaction coachmark */}
-          {showReactionCoach && (
-            <div className="reaction-coachmark" style={{ position: "fixed", right: 96, bottom: 32, zIndex: 1200 }}>
-              <div className="reaction-coachmark__bubble">
-                Try reactions — press <strong>R</strong> or click the button
-                <button
-                  type="button"
-                  onClick={() => {
-                    try {
-                      localStorage.setItem("excalidraw.reactionModeCoachSeen", "true");
-                    } catch (err) {}
-                    setShowReactionCoach(false);
-                  }}
-                  style={{ marginLeft: 8 }}
-                >
-                  Got it
-                </button>
-              </div>
-            </div>
-          )}
-
         </TunnelsContext.Provider>
       </TunnelsJotaiProvider>
     </UIAppStateContext.Provider>

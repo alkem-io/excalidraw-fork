@@ -223,8 +223,6 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     }
   };
 
-  // Confetti broadcasting removed
-
   componentDidMount() {
     window.addEventListener(EVENT.BEFORE_UNLOAD, this.beforeUnload);
     window.addEventListener("online", this.onOfflineStatusToggle);
