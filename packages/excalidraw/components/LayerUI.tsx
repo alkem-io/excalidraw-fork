@@ -63,6 +63,7 @@ import { ImageExportDialog } from "./ImageExportDialog";
 import { Island } from "./Island";
 import { JSONExportDialog } from "./JSONExportDialog";
 import { LaserPointerButton } from "./LaserPointerButton";
+import { ReactionModeButton } from "./ReactionModeButton";
 
 import "./LayerUI.scss";
 import "./Toolbar.scss";
@@ -239,7 +240,7 @@ const LayerUI = ({
     };
   }, []);
 
-  // compute picker position anchored to FAB
+  // compute picker position anchored to the toolbar reaction button
   useEffect(() => {
     if (!showEmojiPicker) {
       setPickerPos(null);
@@ -247,12 +248,14 @@ const LayerUI = ({
     }
 
     const compute = () => {
-      const fab = document.querySelector<HTMLElement>(".reaction-fab-wrapper");
-      if (fab) {
-        const rect = fab.getBoundingClientRect();
-        // align picker's right edge with FAB's right edge
+      const btn = document.querySelector<HTMLElement>(
+        ".reaction-toolbar-button",
+      );
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        // place below the toolbar button, aligned to its right edge
         const left = rect.right;
-        const bottom = window.innerHeight - rect.top + 8; // place above FAB
+        const bottom = window.innerHeight - rect.bottom - 8;
         setPickerPos({ left, bottom });
       } else {
         // fallback
@@ -269,40 +272,11 @@ const LayerUI = ({
     };
   }, [showEmojiPicker]);
 
-  // Keep the reaction overlay from covering the FAB.
-  // The overlay is used to capture taps/clicks for spawning reactions, but the
-  // FAB must stay clickable to allow turning reaction mode off.
+  // The reaction overlay covers the canvas. Since the toolbar button is at the
+  // top (above the overlay's z-index), we only need a small bottom cutout to
+  // keep the footer clickable.
   useEffect(() => {
-    if (!reactionModeActive) {
-      setOverlayBottomCutout(60);
-      return;
-    }
-
-    const compute = () => {
-      try {
-        const fab = document.querySelector<HTMLElement>(
-          ".reaction-fab-wrapper",
-        );
-        if (fab) {
-          const rect = fab.getBoundingClientRect();
-          // Make overlay stop above the FAB (with a small gap).
-          const cutout = Math.ceil(window.innerHeight - rect.top + 8);
-          setOverlayBottomCutout(Math.max(60, cutout));
-          return;
-        }
-      } catch (e) {
-        // ignore
-      }
-      setOverlayBottomCutout(60);
-    };
-
-    compute();
-    window.addEventListener("resize", compute);
-    window.addEventListener("scroll", compute);
-    return () => {
-      window.removeEventListener("resize", compute);
-      window.removeEventListener("scroll", compute);
-    };
+    setOverlayBottomCutout(60);
   }, [reactionModeActive]);
 
   const spawnEmoji = useCallback(
@@ -674,6 +648,8 @@ const LayerUI = ({
                               activeTool={appState.activeTool}
                               UIOptions={UIOptions}
                               app={app}
+                              onToggleReactionMode={toggleReactionMode}
+                              reactionModeActive={reactionModeActive}
                             />
                           </Stack.Row>
                         </Island>
@@ -697,6 +673,21 @@ const LayerUI = ({
                             />
                           </Island>
                         )}
+                        <Island
+                          className="reaction-toolbar-button"
+                          style={{
+                            marginLeft: 8,
+                            alignSelf: "center",
+                            height: "fit-content",
+                          }}
+                        >
+                          <ReactionModeButton
+                            active={reactionModeActive}
+                            onClick={toggleReactionMode}
+                            size="small"
+                            label="Emoji reactions (R)"
+                          />
+                        </Island>
                       </Stack.Row>
                     </Stack.Col>
                   </div>
@@ -916,7 +907,7 @@ const LayerUI = ({
                   left: 0,
                   top: 0,
                   right: 0,
-                  bottom: overlayBottomCutout, // keep FAB/footer clickable so user can exit reaction mode
+                  bottom: overlayBottomCutout, // keep footer clickable
                   cursor: "pointer",
                   zIndex: 900, // below floating emojis so they remain visible
                   // Parent layer-ui wrapper disables pointer events, so opt-in here
@@ -930,27 +921,7 @@ const LayerUI = ({
                   );
                 }}
                 onPointerDown={(e) => {
-                  // ignore pointerdowns that are inside the FAB area (user likely clicked FAB)
-                  try {
-                    const fab = document.querySelector<HTMLElement>(
-                      ".reaction-fab-wrapper",
-                    );
-                    if (fab) {
-                      const r = fab.getBoundingClientRect();
-                      const x = e.clientX;
-                      const y = e.clientY;
-                      if (
-                        x >= r.left &&
-                        x <= r.right &&
-                        y >= r.top &&
-                        y <= r.bottom
-                      ) {
-                        return;
-                      }
-                    }
-                  } catch (err) {}
-
-                  // ignore immediate pointerdown that comes from toggling via FAB
+                  // ignore immediate pointerdown that comes from toggling via toolbar button
                   try {
                     const now = performance.now();
                     if (now - (lastToggleTimeRef.current || 0) < 300) {
@@ -1003,10 +974,6 @@ const LayerUI = ({
               actionManager={actionManager}
               showExitZenModeBtn={showExitZenModeBtn}
               renderWelcomeScreen={renderWelcomeScreen}
-              onToggleReactionMode={() => {
-                toggleReactionMode();
-              }}
-              reactionModeActive={reactionModeActive}
             />
 
             {showEmojiPicker && !reactionModeActive && (

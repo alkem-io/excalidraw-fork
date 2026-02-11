@@ -62,6 +62,7 @@ import {
   frameToolIcon,
   mermaidLogoIcon,
   laserPointerToolIcon,
+  reactionToolIcon,
   MagicIcon,
   LassoIcon,
 } from "./icons";
@@ -286,11 +287,15 @@ export const ShapesSwitcher = ({
   appState,
   app,
   UIOptions,
+  onToggleReactionMode,
+  reactionModeActive,
 }: {
   activeTool: UIAppState["activeTool"];
   appState: UIAppState;
   app: AppClassProperties;
   UIOptions: AppProps["UIOptions"];
+  onToggleReactionMode?: () => void;
+  reactionModeActive?: boolean;
 }) => {
   const [isExtraToolsMenuOpen, setIsExtraToolsMenuOpen] = useState(false);
 
@@ -429,10 +434,22 @@ export const ShapesSwitcher = ({
             {t("toolBar.lasso")}
           </DropdownMenu.Item>
           <DropdownMenu.ItemCustom data-testid="toolbar-emoji">
-            <EmojiPicker
-              onInsert={() => setIsExtraToolsMenuOpen(false)}
-            />
+            <EmojiPicker onInsert={() => setIsExtraToolsMenuOpen(false)} />
           </DropdownMenu.ItemCustom>
+          {onToggleReactionMode && (
+            <DropdownMenu.Item
+              onSelect={() => {
+                setIsExtraToolsMenuOpen(false);
+                onToggleReactionMode();
+              }}
+              icon={reactionToolIcon}
+              data-testid="toolbar-reactions"
+              selected={!!reactionModeActive}
+              shortcut="R"
+            >
+              {t("toolBar.emojiReactions")}
+            </DropdownMenu.Item>
+          )}
           <div style={{ margin: "6px 0", fontSize: 14, fontWeight: 600 }}>
             Generate
           </div>
