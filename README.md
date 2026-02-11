@@ -5,10 +5,13 @@
 ## Alkemio fork of Excalidraw
 
 ### List of differences with standard Excalidraw
+- Selected from a non-yet-released Excalidraw version that is already upgraded to React 19.
 - Added ZoomToFit button to the zoom toolbar.
 - Modified the paste functionality to avoid pasting elements (such as images) as JSON when editing text.
 - Changed the toolbar Lock button behavior. Now it locks/unlocks elements instead of the tool in use.
 - Changed the load from file behavior to fix multi-user collaboration bug. Now elements loaded will be inserted in the current scene instead of replacing all the elements of the scene.
+- Added emoji insert tool
+- Added emoji realtime reaction broadcast tool
 - ~~ZoomToFit feature exposed through the external API~~ not anymore
 - ~~Added ZoomToFit flag to initialData to fit items on load~~ not anymore
 - ~~Added `hideLibraryButton` to the appState to be able to hide the button from outside~~ not anymore
@@ -168,8 +171,16 @@ yarn publish
 - Clone the repository to a local folder: `git clone git@github.com:alkem-io/excalidraw.git` and create a feature branch to store your work.
 - Follow the original Excalidraw instructions below to run and debug with the included test application - Just `yarn ; yarn start` should work.
 - To test/debug Excalidraw inside our client-web application:
-  - Execute `npm link` in the root of your cloned repository.
-  - Go to your client-web folder and execute: `npm link @alkemio/excalidraw --save`
+  - Run in the excalidraw-fork root folder:
+    ```
+    yarn rm:build
+    yarn clean-install
+    yarn build
+    yarn build:package
+    ```
+  - Go to your client-web folder and change the `@alkemio/excalidraw` package version to the relative path of the package:
+    eg: `"@alkemio/excalidraw": "../excalidraw-fork/packages/excalidraw"`
+  - Execute: `pnpm i` in the root of the client-web. From now on, your project is using the local excalidraw package and not a published one.
 - When you're done with the development commit and push everything, create a Pull Request in the alkem-io/excalidraw repository to merge your branch to develop.
 - Once is merged to `develop`, checkout `develop` branch and see below how to build and publish the package to NPM repository.
 - Make sure you switch back the package in your client-web to use the published @alkemio/excalidraw package's new version instead of the old one or the linked one if you changed it.

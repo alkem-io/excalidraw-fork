@@ -55,6 +55,7 @@ import Stack from "./Stack";
 import { ToolButton } from "./ToolButton";
 import { Tooltip } from "./Tooltip";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
+import EmojiPicker from "./EmojiPicker";
 import {
   EmbedIcon,
   extraToolsIcon,
@@ -427,6 +428,11 @@ export const ShapesSwitcher = ({
           >
             {t("toolBar.lasso")}
           </DropdownMenu.Item>
+          <DropdownMenu.ItemCustom data-testid="toolbar-emoji">
+            <EmojiPicker
+              onInsert={() => setIsExtraToolsMenuOpen(false)}
+            />
+          </DropdownMenu.ItemCustom>
           <div style={{ margin: "6px 0", fontSize: 14, fontWeight: 600 }}>
             Generate
           </div>

@@ -1897,6 +1897,16 @@ export const MagicIconThin = createIcon(
   tablerIconProps,
 );
 
+export const EmojiIcon = createIcon(
+  <g stroke="currentColor" fill="none">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+    <circle cx="9" cy="9" r="0.5" fill="currentColor" stroke="none" />
+    <circle cx="15" cy="9" r="0.5" fill="currentColor" stroke="none" />
+  </g>,
+  tablerIconProps,
+);
+
 export const OpenAIIcon = createIcon(
   <g stroke="currentColor" fill="none">
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />

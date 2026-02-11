@@ -307,7 +307,8 @@
     "mermaidToExcalidraw": "Mermaid to Excalidraw",
     "convertElementType": "Toggle shape type",
     "lockElements": "Toggle Lock for selected elements",
-    "zoomToFit": "Zoom to fit all elements"
+    "zoomToFit": "Zoom to fit all elements",
+    "emoji": "Insert Emoji"
   },
   "element": {
     "rectangle": "Rectangle",

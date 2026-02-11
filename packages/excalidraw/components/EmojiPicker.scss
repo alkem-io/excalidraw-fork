@@ -1,0 +1,78 @@
+.excalidraw {
+  .emoji-submenu {
+    position: relative;
+    width: 100%;
+  }
+
+  .emoji-submenu__trigger {
+    height: 2rem;
+    margin: 1px;
+    padding: 0 0.5rem;
+    width: calc(100% - 2px);
+    background-color: transparent;
+    border: 1px solid transparent;
+    align-items: center;
+    cursor: pointer;
+    border-radius: var(--border-radius-md);
+    justify-content: space-between;
+
+    &:hover {
+      background-color: var(--button-hover-bg);
+    }
+
+    &:active {
+      background-color: var(--button-hover-bg);
+      border-color: var(--color-brand-active);
+    }
+  }
+
+  .emoji-submenu__trigger-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .emoji-submenu__chevron {
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.6;
+  }
+
+  .emoji-submenu__panel {
+    position: fixed;
+    background: var(--island-bg-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-island);
+    padding: 0.5rem;
+    z-index: 1;
+    width: max-content;
+  }
+
+  .emoji-submenu__grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+  }
+
+  .emoji-submenu__emoji {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    &:hover {
+      background: var(--button-hover-bg);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+    }
+  }
+}
