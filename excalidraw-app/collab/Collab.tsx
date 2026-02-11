@@ -216,8 +216,8 @@ class Collab extends PureComponent<CollabProps, CollabState> {
           id: `${this.portal.roomId}_${Date.now()}`,
         },
       } as SocketUpdateData;
-      // use reliable channel so reactions always land for all peers
-      await this.portal._broadcastSocketData(data, false);
+      // use volatile channel so reactions don't get queued behind more important updates like scene updates or cursor movements
+      await this.portal._broadcastSocketData(data, true);
     } catch (e) {
       console.error(e);
     }

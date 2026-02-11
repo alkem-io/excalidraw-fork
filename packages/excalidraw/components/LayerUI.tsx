@@ -195,7 +195,6 @@ const LayerUI = ({
         },
       ]);
     });
-    const unsubConfetti = undefined;
 
     return () => {
       unsubEmoji && unsubEmoji();
