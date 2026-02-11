@@ -5,7 +5,7 @@ import { t } from "../i18n";
 
 import { useApp } from "./App";
 import { EmojiIcon } from "./icons";
-import { defaultEmojiReactionConfig } from "./emojis/reactionEmoji/emojiReactionConfig";
+import { defaultInsertEmojiConfig } from "./emojis/insertEmoji/insertEmojiConfig";
 
 import "./EmojiPicker.scss";
 
@@ -72,7 +72,7 @@ const EmojiPicker = ({ onInsert }: { onInsert: () => void }) => {
       {isOpen && (
         <div ref={panelRef} className="emoji-submenu__panel">
           <div className="emoji-submenu__grid">
-            {defaultEmojiReactionConfig.emojis.map((entry) => (
+            {defaultInsertEmojiConfig.emojis.map((entry) => (
               <button
                 key={entry.emoji}
                 className="emoji-submenu__emoji"

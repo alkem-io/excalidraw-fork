@@ -1,7 +1,7 @@
 /**
  * Single emoji entry in the picker configuration.
  */
-export interface EmojiReactionConfigEntry {
+export interface InsertEmojiConfigEntry {
   readonly emoji: string;
   readonly label: string;
   readonly keywords?: readonly string[];
@@ -11,7 +11,7 @@ export interface EmojiReactionConfigEntry {
 /**
  * Complete emoji configuration for the picker.
  */
-export interface EmojiReactionConfiguration {
-  readonly emojis: readonly EmojiReactionConfigEntry[];
+export interface InsertEmojiConfiguration {
+  readonly emojis: readonly InsertEmojiConfigEntry[];
   readonly version: string;
 }

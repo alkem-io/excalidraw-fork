@@ -1,9 +1,8 @@
 /**
- * @fileoverview Default emoji reaction configuration for whiteboard
- * @spec 003-whiteboard-emoji-reactions
+ * @fileoverview Default emoji insert configuration for whiteboard
  *
  * This module provides the default set of 10 emojis for the whiteboard
- * emoji reaction picker. The emojis are selected for safe, constructive
+ * emoji insert picker. The emojis are selected for safe, constructive
  * collaboration as specified in the feature requirements.
  *
  * To customize the emoji set:
@@ -18,10 +17,7 @@
  * - The `category` is optional and reserved for future category filtering
  */
 
-import type {
-  EmojiReactionConfiguration,
-  EmojiReactionConfigEntry,
-} from "./types";
+import type { InsertEmojiConfiguration, InsertEmojiConfigEntry } from "./types";
 
 /**
  * Default emoji entries for the whiteboard reaction picker.
@@ -38,7 +34,7 @@ import type {
  * - 📌 Pin: Important, bookmark, remember
  * - 🚀 Rocket: Progress, momentum, launch
  */
-const defaultEmojis: readonly EmojiReactionConfigEntry[] = [
+const defaultEmojis: readonly InsertEmojiConfigEntry[] = [
   {
     emoji: "👍",
     label: "Thumbs Up",
@@ -105,7 +101,7 @@ const defaultEmojis: readonly EmojiReactionConfigEntry[] = [
  * Default emoji reaction configuration.
  * Exported as the primary configuration for the whiteboard emoji picker.
  */
-export const defaultEmojiReactionConfig: EmojiReactionConfiguration = {
+export const defaultInsertEmojiConfig: InsertEmojiConfiguration = {
   version: "1.0.0",
   emojis: defaultEmojis,
 };
@@ -116,9 +112,9 @@ export const defaultEmojiReactionConfig: EmojiReactionConfiguration = {
  * @param config - Configuration to validate
  * @returns true if valid, false otherwise
  */
-export function isValidEmojiReactionConfig(
-  config: EmojiReactionConfiguration | null | undefined,
-): config is EmojiReactionConfiguration {
+export function isValidInsertEmojiConfig(
+  config: InsertEmojiConfiguration | null | undefined,
+): config is InsertEmojiConfiguration {
   if (!config) {
     return false;
   }

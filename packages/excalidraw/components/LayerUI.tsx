@@ -181,7 +181,6 @@ const LayerUI = ({
     left: number;
     bottom: number;
   } | null>(null);
-  const [overlayBottomCutout, setOverlayBottomCutout] = useState<number>(60);
 
   // Subscribe to incoming ephemeral UI events from collab
   useEffect(() => {
@@ -222,6 +221,13 @@ const LayerUI = ({
     }
 
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        // always attempt to exit reaction mode / close picker on Escape
+        setReactionModeActive(false);
+        setReactionEmoji(null);
+        setShowEmojiPicker(false);
+        return;
+      }
       if (e.key === "r" || e.key === "R") {
         toggleReactionMode();
       }
@@ -272,12 +278,6 @@ const LayerUI = ({
     };
   }, [showEmojiPicker]);
 
-  // The reaction overlay covers the canvas. Since the toolbar button is at the
-  // top (above the overlay's z-index), we only need a small bottom cutout to
-  // keep the footer clickable.
-  useEffect(() => {
-    setOverlayBottomCutout(60);
-  }, [reactionModeActive]);
 
   const spawnEmoji = useCallback(
     (clientX: number, clientY: number) => {
@@ -902,15 +902,12 @@ const LayerUI = ({
             {/* Reaction overlay & UI */}
             {reactionModeActive && reactionEmoji && (
               <div
+                className="reaction-overlay"
                 style={{
-                  position: "fixed",
-                  left: 0,
-                  top: 0,
-                  right: 0,
-                  bottom: overlayBottomCutout, // keep footer clickable
+                  position: "absolute",
+                  inset: 0,
                   cursor: "pointer",
-                  zIndex: 900, // below floating emojis so they remain visible
-                  // Parent layer-ui wrapper disables pointer events, so opt-in here
+                  zIndex: 2, // below toolbar (z-index 10) but above canvas
                   pointerEvents: overlayDisabled ? "none" : "auto",
                 }}
                 onPointerMove={(e) => {
