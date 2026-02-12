@@ -1,11 +1,12 @@
 import { useState, useRef, useLayoutEffect, useCallback } from "react";
 
-import { t } from "../i18n";
+import { t } from "../../i18n";
 
-import { reactionToolIcon } from "./icons";
+import { reactionToolIcon } from "../icons";
+
 import { EmojiPickerPanel } from "./EmojiPickerPanel";
 
-import "./EmojiPicker.scss";
+import "../EmojiPicker.scss";
 
 const ReactionEmojiSubmenu = ({
   onSelect,

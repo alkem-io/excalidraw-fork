@@ -56,7 +56,7 @@ import { ToolButton } from "./ToolButton";
 import { Tooltip } from "./Tooltip";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
 import EmojiPicker from "./EmojiPicker";
-import ReactionEmojiSubmenu from "./ReactionEmojiSubmenu";
+import ReactionEmojiSubmenu from "./emojiReactions/ReactionEmojiSubmenu";
 import {
   EmbedIcon,
   extraToolsIcon,

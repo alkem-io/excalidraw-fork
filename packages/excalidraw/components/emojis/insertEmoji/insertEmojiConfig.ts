@@ -105,34 +105,3 @@ export const defaultInsertEmojiConfig: InsertEmojiConfiguration = {
   version: "1.0.0",
   emojis: defaultEmojis,
 };
-
-/**
- * Validates that an emoji configuration is valid and usable.
- *
- * @param config - Configuration to validate
- * @returns true if valid, false otherwise
- */
-export function isValidInsertEmojiConfig(
-  config: InsertEmojiConfiguration | null | undefined,
-): config is InsertEmojiConfiguration {
-  if (!config) {
-    return false;
-  }
-
-  if (!config.emojis || !Array.isArray(config.emojis)) {
-    return false;
-  }
-
-  if (config.emojis.length === 0) {
-    return false;
-  }
-
-  // Check that all entries have required fields
-  return config.emojis.every(
-    (entry) =>
-      typeof entry.emoji === "string" &&
-      entry.emoji.length > 0 &&
-      typeof entry.label === "string" &&
-      entry.label.length > 0,
-  );
-}

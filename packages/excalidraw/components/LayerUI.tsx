@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React from "react";
 
 import {
   CLASSES,
@@ -7,10 +7,7 @@ import {
   TOOL_TYPE,
   arrayToMap,
   capitalizeString,
-  isTestEnv,
   isShallowEqual,
-  sceneCoordsToViewportCoords,
-  viewportCoordsToSceneCoords,
 } from "@excalidraw/common";
 
 import { mutateElement } from "@excalidraw/element";
@@ -31,8 +28,13 @@ import { useAtom, useAtomValue } from "../editor-jotai";
 import { t } from "../i18n";
 import { calculateScrollCenter } from "../scene";
 
-import { EmojiPickerPanel } from "./EmojiPickerPanel";
-import { FloatingEmoji } from "./FloatingEmoji";
+import {
+  useEmojiReactions,
+  EmojiPickerPanel,
+  ReactionModeButton,
+  ReactionOverlay,
+  FloatingEmojisLayer,
+} from "./emojiReactions";
 
 import { SelectedShapeActions, ShapesSwitcher } from "./Actions";
 import { LoadingMessage } from "./LoadingMessage";
@@ -63,7 +65,6 @@ import { ImageExportDialog } from "./ImageExportDialog";
 import { Island } from "./Island";
 import { JSONExportDialog } from "./JSONExportDialog";
 import { LaserPointerButton } from "./LaserPointerButton";
-import { ReactionModeButton } from "./ReactionModeButton";
 
 import "./LayerUI.scss";
 import "./Toolbar.scss";
@@ -165,316 +166,7 @@ const LayerUI = ({
   const device = useDevice();
   const tunnels = useInitializeTunnels();
 
-  /* Begin Emoji reactions */
-  // Emoji / reactions state
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [floatingEmojis, setFloatingEmojis] = useState<
-    Array<{ id: string; emoji: string; sceneX: number; sceneY: number }>
-  >([]);
-  const reactionModeActive =
-    appState.activeTool.type === TOOL_TYPE.emojiReaction;
-  const [reactionEmoji, setReactionEmoji] = useState<string | null>(null);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
-  const lastSpawnRef = useRef<number>(0);
-  const [showReactionCoach, setShowReactionCoach] = useState(false);
-  const lastToggleTimeRef = useRef<number>(0);
-  const [overlayDisabled, setOverlayDisabled] = useState(false);
-  const overlayDisableTimeoutRef = useRef<number | null>(null);
-
-  // Subscribe to incoming ephemeral UI events from collab
-  useEffect(() => {
-    const unsubEmoji = app.onIncomingEmojiReactionEmitter?.on((payload) => {
-      setFloatingEmojis((prev) => [
-        ...prev,
-        {
-          id: payload.id,
-          emoji: payload.emoji,
-          sceneX: payload.x,
-          sceneY: payload.y,
-        },
-      ]);
-    });
-
-    return () => {
-      unsubEmoji && unsubEmoji();
-    };
-  }, [app]);
-
-  // initialize coach mark and keyboard shortcut
-  useEffect(() => {
-    if (!isTestEnv()) {
-      try {
-        const coachSeen = localStorage.getItem(
-          "excalidraw.reactionModeCoachSeen",
-        );
-        if (!coachSeen) {
-          setShowReactionCoach(true);
-        }
-      } catch (e) {
-        // ignore localStorage errors
-      }
-    }
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "r" || e.key === "R") {
-        toggleReactionMode();
-      }
-    };
-
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (overlayDisableTimeoutRef.current) {
-        window.clearTimeout(overlayDisableTimeoutRef.current);
-        overlayDisableTimeoutRef.current = null;
-      }
-    };
-  }, []);
-
-  // close emoji picker on click outside
-  useEffect(() => {
-    if (!showEmojiPicker) {
-      return;
-    }
-    const onPointerDown = (e: PointerEvent) => {
-      if (
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(e.target as Node)
-      ) {
-        setShowEmojiPicker(false);
-      }
-    };
-    // use a timeout so the opening click itself doesn't immediately close it
-    const id = window.setTimeout(
-      () => window.addEventListener("pointerdown", onPointerDown),
-      0,
-    );
-    return () => {
-      window.clearTimeout(id);
-      window.removeEventListener("pointerdown", onPointerDown);
-    };
-  }, [showEmojiPicker]);
-
-  const spawnEmoji = useCallback(
-    (clientX: number, clientY: number) => {
-      if (!reactionEmoji) {
-        return;
-      }
-      const id = Math.random().toString(36).slice(2);
-      const emoji = reactionEmoji;
-
-      const canvasRect = canvas?.getBoundingClientRect();
-      const offsetLeft = canvasRect?.left ?? 0;
-      const offsetTop = canvasRect?.top ?? 0;
-
-      const { x: sceneX, y: sceneY } = viewportCoordsToSceneCoords(
-        { clientX, clientY },
-        {
-          zoom: appState.zoom,
-          offsetLeft,
-          offsetTop,
-          scrollX: app.state.scrollX,
-          scrollY: app.state.scrollY,
-        },
-      );
-
-      // Show locally immediately
-      setFloatingEmojis((prev) => [...prev, { id, emoji, sceneX, sceneY }]);
-      try {
-        app.props.onRequestBroadcastEmojiReaction?.(emoji, sceneX, sceneY);
-      } catch (e) {
-        // ignore
-      }
-    },
-    [reactionEmoji, app, appState.zoom, canvas],
-  );
-
-  // When reaction mode is active, we render an overlay on top of the canvas.
-  // Since it intercepts pointer events, forward pointer updates to the host
-  // `onPointerUpdate` callback so collab cursors (and usernames) keep tracking.
-  const reactionPointersMapRef = useRef<Map<number, { x: number; y: number }>>(
-    new Map(),
-  );
-  const reactionCursorButtonRef = useRef<"up" | "down">("up");
-  const reactionRafRef = useRef<number | null>(null);
-  const reactionPendingPointerRef = useRef<{
-    clientX: number;
-    clientY: number;
-    pointerId: number;
-  } | null>(null);
-
-  const forwardPointerUpdate = useCallback(
-    (clientX: number, clientY: number, pointerId: number) => {
-      if (!app.props.onPointerUpdate) {
-        return;
-      }
-
-      // Match the semantics of App's gesture pointersMap:
-      // - for mouse hover (button up) we forward an empty pointersMap
-      // - when pointer is down, keep a 1-pointer entry
-      const pointersMap = reactionPointersMapRef.current;
-      const isDown = reactionCursorButtonRef.current === "down";
-      if (isDown) {
-        const existing = pointersMap.get(pointerId);
-        if (existing) {
-          existing.x = clientX;
-          existing.y = clientY;
-        } else {
-          pointersMap.set(pointerId, { x: clientX, y: clientY });
-        }
-      } else {
-        pointersMap.delete(pointerId);
-      }
-
-      const canvasRect = canvas?.getBoundingClientRect();
-      const offsetLeft = canvasRect?.left ?? 0;
-      const offsetTop = canvasRect?.top ?? 0;
-
-      const { x: sceneX, y: sceneY } = viewportCoordsToSceneCoords(
-        { clientX, clientY },
-        {
-          zoom: appState.zoom,
-          offsetLeft,
-          offsetTop,
-          scrollX: app.state.scrollX,
-          scrollY: app.state.scrollY,
-        },
-      );
-
-      app.props.onPointerUpdate({
-        pointer: {
-          x: sceneX,
-          y: sceneY,
-          tool: app.state.activeTool.type === "laser" ? "laser" : "pointer",
-        },
-        button: reactionCursorButtonRef.current,
-        pointersMap,
-      });
-    },
-    [app, appState.zoom, canvas],
-  );
-
-  const scheduleForwardPointerUpdate = useCallback(
-    (clientX: number, clientY: number, pointerId: number) => {
-      reactionPendingPointerRef.current = { clientX, clientY, pointerId };
-      if (reactionRafRef.current != null) {
-        return;
-      }
-      reactionRafRef.current = window.requestAnimationFrame(() => {
-        reactionRafRef.current = null;
-        const pending = reactionPendingPointerRef.current;
-        if (!pending) {
-          return;
-        }
-        forwardPointerUpdate(
-          pending.clientX,
-          pending.clientY,
-          pending.pointerId,
-        );
-      });
-    },
-    [forwardPointerUpdate],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (reactionRafRef.current != null) {
-        window.cancelAnimationFrame(reactionRafRef.current);
-        reactionRafRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!reactionModeActive) {
-      reactionCursorButtonRef.current = "up";
-      reactionPointersMapRef.current.clear();
-      reactionPendingPointerRef.current = null;
-      if (reactionRafRef.current != null) {
-        window.cancelAnimationFrame(reactionRafRef.current);
-        reactionRafRef.current = null;
-      }
-    }
-  }, [reactionModeActive]);
-
-  const toggleReactionMode = useCallback(() => {
-    try {
-      lastToggleTimeRef.current = performance.now();
-    } catch (err) {}
-    // temporarily disable overlay to avoid immediate accidental spawns
-    setOverlayDisabled(true);
-    if (overlayDisableTimeoutRef.current) {
-      window.clearTimeout(overlayDisableTimeoutRef.current);
-    }
-    overlayDisableTimeoutRef.current = window.setTimeout(() => {
-      setOverlayDisabled(false);
-      overlayDisableTimeoutRef.current = null;
-    }, 350) as unknown as number;
-
-    // turn off
-    if (reactionModeActive) {
-      setReactionEmoji(null);
-      setShowEmojiPicker(false);
-      app.setActiveTool({ type: "selection" });
-      return;
-    }
-
-    // turn on but no emoji selected -> open picker first
-    if (!reactionEmoji) {
-      setShowEmojiPicker(true);
-      return;
-    }
-
-    // turn on with emoji selected
-    if (!isTestEnv()) {
-      try {
-        if (showReactionCoach) {
-          localStorage.setItem("excalidraw.reactionModeCoachSeen", "true");
-          setShowReactionCoach(false);
-        }
-      } catch (err) { }
-    }
-    try {
-      lastToggleTimeRef.current = performance.now();
-    } catch (err) { }
-    app.setActiveTool({ type: TOOL_TYPE.emojiReaction });
-  }, [reactionModeActive, reactionEmoji, showReactionCoach, app]);
-
-  /** Called from both the dropdown submenu and the toolbar-button submenu */
-  const handleSelectReactionEmoji = useCallback(
-    (emoji: string) => {
-      setReactionEmoji(emoji);
-      setShowEmojiPicker(false);
-
-      try {
-        lastToggleTimeRef.current = performance.now();
-      } catch (err) { }
-      setOverlayDisabled(true);
-      if (overlayDisableTimeoutRef.current) {
-        window.clearTimeout(overlayDisableTimeoutRef.current);
-      }
-      overlayDisableTimeoutRef.current = window.setTimeout(() => {
-        setOverlayDisabled(false);
-        overlayDisableTimeoutRef.current = null;
-      }, 350) as unknown as number;
-
-      if (!isTestEnv()) {
-        try {
-          if (showReactionCoach) {
-            localStorage.setItem("excalidraw.reactionModeCoachSeen", "true");
-            setShowReactionCoach(false);
-          }
-        } catch (err) { }
-      }
-      app.setActiveTool({ type: TOOL_TYPE.emojiReaction });
-    },
-    [showReactionCoach, app],
-  );
-
-  /* End emojis */
+  const reactions = useEmojiReactions(app, appState, canvas);
 
   const TunnelsJotaiProvider = tunnels.tunnelsJotai.Provider;
 
@@ -648,7 +340,9 @@ const LayerUI = ({
                               activeTool={appState.activeTool}
                               UIOptions={UIOptions}
                               app={app}
-                            onSelectReactionEmoji={handleSelectReactionEmoji}
+                            onSelectReactionEmoji={
+                              reactions.handleSelectReactionEmoji
+                            }
                             />
                           </Stack.Row>
                         </Island>
@@ -678,23 +372,24 @@ const LayerUI = ({
                       >
                           <ReactionModeButton
                             title={t("toolBar.emojiReactions")}
-                            checked={reactionModeActive}
-                            onChange={toggleReactionMode}
+                          checked={reactions.reactionModeActive}
+                          onChange={reactions.toggleReactionMode}
                             isMobile
                           />
-                        {showEmojiPicker && !reactionModeActive && (
-                          <div
-                            ref={emojiPickerRef}
+                        {reactions.showEmojiPicker &&
+                          !reactions.reactionModeActive && (
+                            <div
+                            ref={reactions.emojiPickerRef}
                             className="emoji-submenu__panel emoji-submenu__panel--below"
                             data-testid="emoji-picker-wrapper"
                           >
                             <EmojiPickerPanel
                               onSelect={(emoji) => {
-                                handleSelectReactionEmoji(emoji);
-                              }}
-                            />
-                          </div>
-                        )}
+                                  reactions.handleSelectReactionEmoji(emoji);
+                                }}
+                              />
+                            </div>
+                          )}
                         </Island>
                       </Stack.Row>
                     </Stack.Col>
@@ -907,71 +602,16 @@ const LayerUI = ({
             {renderWelcomeScreen && <tunnels.WelcomeScreenCenterTunnel.Out />}
             {renderFixedSideContainer()}
 
-            {/* Reaction overlay & UI */}
-            {reactionModeActive && reactionEmoji && (
-              <div
-                className="reaction-overlay"
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  cursor: "pointer",
-                  zIndex: -1, // below toolbar
-                  pointerEvents: overlayDisabled ? "none" : "auto",
-                  background: "rgba(255, 0, 0, 0.5)", //!!
-                }}
-                onPointerMove={(e) => {
-                  scheduleForwardPointerUpdate(
-                    e.clientX,
-                    e.clientY,
-                    e.pointerId,
-                  );
-                }}
-                onPointerDown={(e) => {
-                  // ignore immediate pointerdown that comes from toggling via toolbar button
-                  try {
-                    const now = performance.now();
-                    if (now - (lastToggleTimeRef.current || 0) < 300) {
-                      // swallow event
-                      return;
-                    }
-                  } catch (err) {}
-
-                  reactionCursorButtonRef.current = "down";
-                  scheduleForwardPointerUpdate(
-                    e.clientX,
-                    e.clientY,
-                    e.pointerId,
-                  );
-
-                  e.stopPropagation();
-                  spawnEmoji(e.clientX, e.clientY);
-                  lastSpawnRef.current = performance.now();
-                  const move = (ev: PointerEvent) => {
-                    const now = performance.now();
-                    if (now - lastSpawnRef.current > 90) {
-                      spawnEmoji(ev.clientX, ev.clientY);
-                      lastSpawnRef.current = now;
-                    }
-
-                    scheduleForwardPointerUpdate(
-                      ev.clientX,
-                      ev.clientY,
-                      ev.pointerId,
-                    );
-                  };
-                  const up = (ev: PointerEvent) => {
-                    reactionCursorButtonRef.current = "up";
-                    scheduleForwardPointerUpdate(
-                      ev.clientX,
-                      ev.clientY,
-                      ev.pointerId,
-                    );
-                    window.removeEventListener("pointermove", move);
-                    window.removeEventListener("pointerup", up);
-                  };
-                  window.addEventListener("pointermove", move);
-                  window.addEventListener("pointerup", up);
-                }}
+            {reactions.reactionModeActive && reactions.reactionEmoji && (
+              <ReactionOverlay
+                overlayDisabled={reactions.overlayDisabled}
+                lastToggleTimeRef={reactions.lastToggleTimeRef}
+                reactionCursorButtonRef={reactions.reactionCursorButtonRef}
+                lastSpawnRef={reactions.lastSpawnRef}
+                spawnEmoji={reactions.spawnEmoji}
+                scheduleForwardPointerUpdate={
+                  reactions.scheduleForwardPointerUpdate
+                }
               />
             )}
 
@@ -1012,31 +652,15 @@ const LayerUI = ({
         <TunnelsContext.Provider value={tunnels}>
           {layerUIJSX}
 
-          {/* Floating emojis */}
-          {floatingEmojis.map((e) => {
-            const { x, y } = sceneCoordsToViewportCoords(
-              { sceneX: e.sceneX, sceneY: e.sceneY },
-              {
-                zoom: appState.zoom,
-                offsetLeft: canvasOffsetLeft,
-                offsetTop: canvasOffsetTop,
-                scrollX: app.state.scrollX,
-                scrollY: app.state.scrollY,
-              },
-            );
-
-            return (
-              <FloatingEmoji
-                key={e.id}
-                emoji={e.emoji}
-                x={x}
-                y={y}
-                onDone={() =>
-                  setFloatingEmojis((prev) => prev.filter((p) => p.id !== e.id))
-                }
-              />
-            );
-          })}
+          <FloatingEmojisLayer
+            floatingEmojis={reactions.floatingEmojis}
+            zoom={appState.zoom}
+            canvasOffsetLeft={canvasOffsetLeft}
+            canvasOffsetTop={canvasOffsetTop}
+            scrollX={app.state.scrollX}
+            scrollY={app.state.scrollY}
+            onRemove={reactions.removeFloatingEmoji}
+          />
         </TunnelsContext.Provider>
       </TunnelsJotaiProvider>
     </UIAppStateContext.Provider>

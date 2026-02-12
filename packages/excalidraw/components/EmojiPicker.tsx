@@ -64,7 +64,7 @@ const EmojiPicker = ({ onInsert }: { onInsert: () => void }) => {
         aria-expanded={isOpen}
       >
         <div className="dropdown-menu-item__icon">{EmojiIcon}</div>
-        <div className="dropdown-menu-item__text">{t("toolBar.emoji")}</div>
+        <div className="dropdown-menu-item__text">{t("toolBar.insertEmoji")}</div>
         <span className="emoji-submenu__chevron" aria-hidden="true">
           ›
         </span>
