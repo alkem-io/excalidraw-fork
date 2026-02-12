@@ -24,7 +24,7 @@ export const ReactionOverlay: React.FC<ReactionOverlayProps> = ({
       // ignore immediate pointerdown that comes from toggling via toolbar button
       try {
         const now = performance.now();
-        if (now - (lastToggleTimeRef.current || 0) < 300) {
+        if (now - (lastToggleTimeRef.current || 0) < 20) {
           return;
         }
       } catch (err) {
@@ -73,7 +73,6 @@ export const ReactionOverlay: React.FC<ReactionOverlayProps> = ({
         position: "absolute",
         inset: 0,
         cursor: "pointer",
-        zIndex: -1,
         pointerEvents: overlayDisabled ? "none" : "auto",
       }}
       onPointerMove={(e) => {

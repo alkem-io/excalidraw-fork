@@ -4,9 +4,9 @@ import { t } from "../../i18n";
 
 import { reactionToolIcon } from "../icons";
 
-import { EmojiPickerPanel } from "./EmojiPickerPanel";
-
 import "../EmojiPicker.scss";
+
+import { EmojiPickerPanel } from "./EmojiPickerPanel";
 
 const ReactionEmojiSubmenu = ({
   onSelect,

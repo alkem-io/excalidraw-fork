@@ -190,7 +190,7 @@ export const useEmojiReactions = (
     overlayDisableTimeoutRef.current = window.setTimeout(() => {
       setOverlayDisabled(false);
       overlayDisableTimeoutRef.current = null;
-    }, 350) as unknown as number;
+    }, 35) as unknown as number;
   };
 
   const dismissCoachMark = () => {

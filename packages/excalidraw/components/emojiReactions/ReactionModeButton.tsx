@@ -12,6 +12,7 @@ type ReactionModeButtonProps = {
   checked: boolean;
   onChange?(): void;
   isMobile?: boolean;
+  activeEmoji?: string | null;
 };
 
 const DEFAULT_SIZE: ToolButtonSize = "small";
@@ -37,7 +38,15 @@ export const ReactionModeButton = (props: ReactionModeButtonProps) => {
         aria-label={props.title}
         data-testid="toolbar-ReactionMode"
       />
-      <div className="ToolIcon__icon">{reactionToolIcon}</div>
+      <div className="ToolIcon__icon">
+        {props.activeEmoji ? (
+          <span style={{ fontSize: "1.25em", lineHeight: 1 }}>
+            {props.activeEmoji}
+          </span>
+        ) : (
+          reactionToolIcon
+        )}
+      </div>
     </label>
   );
 };

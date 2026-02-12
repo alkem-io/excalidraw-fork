@@ -340,9 +340,9 @@ const LayerUI = ({
                               activeTool={appState.activeTool}
                               UIOptions={UIOptions}
                               app={app}
-                            onSelectReactionEmoji={
-                              reactions.handleSelectReactionEmoji
-                            }
+                              onSelectReactionEmoji={
+                                reactions.handleSelectReactionEmoji
+                              }
                             />
                           </Stack.Row>
                         </Island>
@@ -366,31 +366,40 @@ const LayerUI = ({
                             />
                           </Island>
                         )}
-                      <Island
-                        className="reaction-toolbar-button"
-                        style={{ position: "relative" }}
-                      >
-                          <ReactionModeButton
-                            title={t("toolBar.emojiReactions")}
-                          checked={reactions.reactionModeActive}
-                          onChange={reactions.toggleReactionMode}
-                            isMobile
-                          />
-                        {reactions.showEmojiPicker &&
-                          !reactions.reactionModeActive && (
-                            <div
-                            ref={reactions.emojiPickerRef}
-                            className="emoji-submenu__panel emoji-submenu__panel--below"
-                            data-testid="emoji-picker-wrapper"
+                        {isCollaborating && (
+                          <Island
+                            className="reaction-toolbar-button"
+                            style={{ position: "relative" }}
                           >
-                            <EmojiPickerPanel
-                              onSelect={(emoji) => {
-                                  reactions.handleSelectReactionEmoji(emoji);
-                                }}
-                              />
-                            </div>
-                          )}
-                        </Island>
+                            <ReactionModeButton
+                              title={t("toolBar.emojiReactions")}
+                              checked={reactions.reactionModeActive}
+                              onChange={reactions.toggleReactionMode}
+                              isMobile
+                              activeEmoji={
+                                reactions.reactionModeActive
+                                  ? reactions.reactionEmoji
+                                  : null
+                              }
+                            />
+                            {reactions.showEmojiPicker &&
+                              !reactions.reactionModeActive && (
+                                <div
+                                  ref={reactions.emojiPickerRef}
+                                  className="emoji-submenu__panel emoji-submenu__panel--below"
+                                  data-testid="emoji-picker-wrapper"
+                                >
+                                  <EmojiPickerPanel
+                                    onSelect={(emoji) => {
+                                      reactions.handleSelectReactionEmoji(
+                                        emoji,
+                                      );
+                                    }}
+                                  />
+                                </div>
+                              )}
+                          </Island>
+                        )}
                       </Stack.Row>
                     </Stack.Col>
                   </div>
@@ -599,9 +608,6 @@ const LayerUI = ({
                 : {}
             }
           >
-            {renderWelcomeScreen && <tunnels.WelcomeScreenCenterTunnel.Out />}
-            {renderFixedSideContainer()}
-
             {reactions.reactionModeActive && reactions.reactionEmoji && (
               <ReactionOverlay
                 overlayDisabled={reactions.overlayDisabled}
@@ -614,6 +620,8 @@ const LayerUI = ({
                 }
               />
             )}
+            {renderWelcomeScreen && <tunnels.WelcomeScreenCenterTunnel.Out />}
+            {renderFixedSideContainer()}
 
             <Footer
               appState={appState}
