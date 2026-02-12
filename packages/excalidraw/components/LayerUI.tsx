@@ -221,13 +221,6 @@ const LayerUI = ({
     }
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        // always attempt to exit reaction mode / close picker on Escape
-        setReactionModeActive(false);
-        setReactionEmoji(null);
-        setShowEmojiPicker(false);
-        return;
-      }
       if (e.key === "r" || e.key === "R") {
         toggleReactionMode();
       }
