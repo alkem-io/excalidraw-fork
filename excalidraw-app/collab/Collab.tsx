@@ -121,8 +121,7 @@ export interface CollabAPI {
   getUsername: CollabInstance["getUsername"];
   getActiveRoomLink: CollabInstance["getActiveRoomLink"];
   setCollabError: CollabInstance["setErrorDialog"];
-  // Broadcast ephemeral UI events
-  broadcastFloatingEmoji: CollabInstance["broadcastFloatingEmoji"];
+  broadcastEmojiReaction: CollabInstance["broadcastEmojiReaction"];
 }
 
 interface CollabProps {
@@ -204,11 +203,11 @@ class Collab extends PureComponent<CollabProps, CollabState> {
 
   private onUmmount: (() => void) | null = null;
 
-  // Broadcast an ephemeral floating emoji to other clients (volatile)
-  broadcastFloatingEmoji = async (emoji: string, x: number, y: number) => {
+  // Broadcast an ephemeral floating emoji reaction to other clients
+  broadcastEmojiReaction = async (emoji: string, x: number, y: number) => {
     try {
       const data = {
-        type: WS_SUBTYPES.FLOATING_EMOJI,
+        type: WS_SUBTYPES.EMOJI_REACTION,
         payload: {
           emoji,
           x,
@@ -256,7 +255,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       getUsername: this.getUsername,
       getActiveRoomLink: this.getActiveRoomLink,
       setCollabError: this.setErrorDialog,
-      broadcastFloatingEmoji: this.broadcastFloatingEmoji,
+      broadcastEmojiReaction: this.broadcastEmojiReaction,
     };
 
     appJotaiStore.set(collabAPIAtom, collabAPI);
@@ -669,11 +668,11 @@ class Collab extends PureComponent<CollabProps, CollabState> {
             break;
           }
 
-          case WS_SUBTYPES.FLOATING_EMOJI: {
+          case WS_SUBTYPES.EMOJI_REACTION: {
             try {
               const { emoji, x, y, id } = decryptedData.payload;
               // forward to Excalidraw to display (optional subscriber)
-              this.excalidrawAPI?.dispatchIncomingFloatingEmoji?.({
+              this.excalidrawAPI?.dispatchIncomingEmojiReaction?.({
                 id: id || `${decryptedData.type}_${Date.now()}`,
                 emoji,
                 x,

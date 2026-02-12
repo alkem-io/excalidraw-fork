@@ -184,7 +184,7 @@ const LayerUI = ({
 
   // Subscribe to incoming ephemeral UI events from collab
   useEffect(() => {
-    const unsubEmoji = app.onIncomingFloatingEmojiEmitter?.on((payload) => {
+    const unsubEmoji = app.onIncomingEmojiReactionEmitter?.on((payload) => {
       setFloatingEmojis((prev) => [
         ...prev,
         {
@@ -298,7 +298,7 @@ const LayerUI = ({
       // Show locally immediately
       setFloatingEmojis((prev) => [...prev, { id, emoji, sceneX, sceneY }]);
       try {
-        app.props.onRequestBroadcastFloatingEmoji?.(emoji, sceneX, sceneY);
+        app.props.onRequestBroadcastEmojiReaction?.(emoji, sceneX, sceneY);
       } catch (e) {
         // ignore
       }

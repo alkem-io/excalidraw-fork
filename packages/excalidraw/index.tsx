@@ -49,7 +49,7 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
     onPointerUp,
     onScrollChange,
     onDuplicate,
-    onRequestBroadcastFloatingEmoji,
+    onRequestBroadcastEmojiReaction,
     children,
     validateEmbeddable,
     renderEmbeddable,
@@ -143,7 +143,7 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
           onPointerUp={onPointerUp}
           onScrollChange={onScrollChange}
           onDuplicate={onDuplicate}
-          onRequestBroadcastFloatingEmoji={onRequestBroadcastFloatingEmoji}
+          onRequestBroadcastEmojiReaction={onRequestBroadcastEmojiReaction}
           validateEmbeddable={validateEmbeddable}
           renderEmbeddable={renderEmbeddable}
           aiEnabled={aiEnabled !== false}

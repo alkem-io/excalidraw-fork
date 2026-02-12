@@ -611,8 +611,8 @@ export interface ExcalidrawProps {
   onScrollChange?: (scrollX: number, scrollY: number, zoom: Zoom) => void;
   onUserFollow?: (payload: OnUserFollowedPayload) => void;
 
-  /** Request host app to broadcast a floating emoji at a scene point (if collab is enabled) */
-  onRequestBroadcastFloatingEmoji?: (
+  /** Request host app to broadcast a emoji reaction at a scene point (if collab is enabled) */
+  onRequestBroadcastEmojiReaction?: (
     emoji: string,
     x: number,
     y: number,
@@ -744,7 +744,7 @@ export type AppClassProperties = {
   excalidrawContainerValue: App["excalidrawContainerValue"];
 
   onPointerUpEmitter: App["onPointerUpEmitter"];
-  onIncomingFloatingEmojiEmitter: App["onIncomingFloatingEmojiEmitter"];
+  onIncomingEmojiReactionEmitter: App["onIncomingEmojiReactionEmitter"];
   updateEditorAtom: App["updateEditorAtom"];
 };
 
@@ -845,7 +845,9 @@ export interface ExcalidrawImperativeAPI {
    * used in conjunction with view mode (props.viewModeEnabled).
    */
   updateFrameRendering: InstanceType<typeof App>["updateFrameRendering"];
-  addElementsFromPasteOrLibrary: InstanceType<typeof App>["addElementsFromPasteOrLibrary"];
+  addElementsFromPasteOrLibrary: InstanceType<
+    typeof App
+  >["addElementsFromPasteOrLibrary"];
   onChange: (
     callback: (
       elements: readonly ExcalidrawElement[],
@@ -876,8 +878,8 @@ export interface ExcalidrawImperativeAPI {
   onUserFollow: (
     callback: (payload: OnUserFollowedPayload) => void,
   ) => UnsubscribeCallback;
-  // Incoming ephemeral UI events: floating emoji (from collab). Coordinates are scene/whiteboard coords.
-  onIncomingFloatingEmoji: (
+  // Incoming ephemeral UI events: emoji reactions (from Collab). Coordinates are scene/whiteboard coords.
+  onIncomingEmojiReaction: (
     callback: (payload: {
       id: string;
       emoji: string;
@@ -885,7 +887,7 @@ export interface ExcalidrawImperativeAPI {
       y: number;
     }) => void,
   ) => UnsubscribeCallback;
-  dispatchIncomingFloatingEmoji: (payload: {
+  dispatchIncomingEmojiReaction: (payload: {
     id: string;
     emoji: string;
     x: number;

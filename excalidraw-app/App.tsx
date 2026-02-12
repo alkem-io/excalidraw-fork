@@ -848,7 +848,7 @@ const ExcalidrawWrapper = () => {
         handleKeyboardGlobally={true}
         autoFocus={true}
         theme={editorTheme}
-        onRequestBroadcastFloatingEmoji={collabAPI?.broadcastFloatingEmoji}
+        onRequestBroadcastEmojiReaction={collabAPI?.broadcastEmojiReaction}
         renderTopRightUI={(isMobile) => {
           if (isMobile || !collabAPI || isCollabDisabled) {
             return null;
