@@ -619,6 +619,13 @@ export interface ExcalidrawProps {
     y: number,
   ) => void;
 
+  /** Request host app to broadcast countdown timer state (if collab is enabled) */
+  onRequestBroadcastCountdownTimer?: (
+    remainingSeconds: number,
+    startedBy: string,
+    active: boolean,
+  ) => void;
+
   children?: React.ReactNode;
   validateEmbeddable?:
     | boolean
@@ -746,6 +753,7 @@ export type AppClassProperties = {
 
   onPointerUpEmitter: App["onPointerUpEmitter"];
   onIncomingEmojiReactionEmitter: App["onIncomingEmojiReactionEmitter"];
+  onIncomingCountdownTimerEmitter: App["onIncomingCountdownTimerEmitter"];
   updateEditorAtom: App["updateEditorAtom"];
 };
 
@@ -885,6 +893,12 @@ export interface ExcalidrawImperativeAPI {
     emoji: string;
     x: number;
     y: number;
+  }) => void;
+  // Incoming ephemeral UI events: countdown timer state (from Collab).
+  dispatchIncomingCountdownTimer: (payload: {
+    remainingSeconds: number;
+    startedBy: string;
+    active: boolean;
   }) => void;
 }
 

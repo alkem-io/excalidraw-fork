@@ -128,6 +128,14 @@ export type SocketUpdateDataSource = {
       id?: string;
     };
   };
+  COUNTDOWN_TIMER: {
+    type: WS_SUBTYPES.COUNTDOWN_TIMER;
+    payload: {
+      remainingSeconds: number;
+      startedBy: string;
+      active: boolean;
+    };
+  };
 };
 
 export type SocketUpdateDataIncoming =

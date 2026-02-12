@@ -849,6 +849,7 @@ const ExcalidrawWrapper = () => {
         autoFocus={true}
         theme={editorTheme}
         onRequestBroadcastEmojiReaction={collabAPI?.broadcastEmojiReaction}
+        onRequestBroadcastCountdownTimer={collabAPI?.broadcastCountdownTimer}
         renderTopRightUI={(isMobile) => {
           if (isMobile || !collabAPI || isCollabDisabled) {
             return null;

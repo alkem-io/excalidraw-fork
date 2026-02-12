@@ -57,6 +57,7 @@ import { Tooltip } from "./Tooltip";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
 import EmojiPicker from "./EmojiPicker";
 import ReactionEmojiSubmenu from "./emojiReactions/ReactionEmojiSubmenu";
+import CountdownTimerSubmenu from "./countdownTimer/CountdownTimerSubmenu";
 import {
   EmbedIcon,
   extraToolsIcon,
@@ -288,12 +289,14 @@ export const ShapesSwitcher = ({
   app,
   UIOptions,
   onSelectReactionEmoji,
+  onStartCountdownTimer,
 }: {
   activeTool: UIAppState["activeTool"];
   appState: UIAppState;
   app: AppClassProperties;
   UIOptions: AppProps["UIOptions"];
   onSelectReactionEmoji?: (emoji: string) => void;
+  onStartCountdownTimer?: (minutes: number, seconds: number) => void;
 }) => {
   const [isExtraToolsMenuOpen, setIsExtraToolsMenuOpen] = useState(false);
 
@@ -440,6 +443,16 @@ export const ShapesSwitcher = ({
                 onSelect={(emoji) => {
                   setIsExtraToolsMenuOpen(false);
                   onSelectReactionEmoji(emoji);
+                }}
+              />
+            </DropdownMenu.ItemCustom>
+          )}
+          {onStartCountdownTimer && (
+            <DropdownMenu.ItemCustom data-testid="toolbar-countdown-timer">
+              <CountdownTimerSubmenu
+                onStart={(minutes, seconds) => {
+                  setIsExtraToolsMenuOpen(false);
+                  onStartCountdownTimer(minutes, seconds);
                 }}
               />
             </DropdownMenu.ItemCustom>

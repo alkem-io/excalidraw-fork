@@ -1,0 +1,126 @@
+/* Countdown timer panel and submenu */
+
+.countdown-timer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.countdown-timer-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  height: var(--default-button-size);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: var(--border-radius-lg);
+
+  &--warning {
+    color: #e03131;
+  }
+
+  &--critical {
+    animation: countdown-blink 0.6s ease-in-out infinite;
+  }
+
+  &__time {
+    min-width: 3.2em;
+    text-align: center;
+  }
+
+  &__cancel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 4px;
+    color: inherit;
+    opacity: 0.7;
+
+    &:hover {
+      opacity: 1;
+      background: var(--color-surface-mid);
+    }
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+@keyframes countdown-blink {
+  0%,
+  100% {
+    background-color: #e03131;
+    color: #fff;
+  }
+  50% {
+    background-color: #ff6b6b;
+    color: #fff;
+  }
+}
+
+/* Submenu panel (inside extra tools dropdown) */
+.countdown-timer-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px;
+  min-width: 180px;
+
+  &__title {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  &__inputs {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+
+    span {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+
+    input {
+      width: 100%;
+      padding: 4px 6px;
+      border: 1px solid var(--color-border-outline-primary);
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+      background: var(--island-bg-color);
+      color: var(--text-primary-color);
+    }
+  }
+
+  &__start {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+  }
+}

@@ -36,6 +36,8 @@ import {
   FloatingEmojisLayer,
 } from "./emojiReactions";
 
+import { useCountdownTimer, CountdownTimerPanel } from "./countdownTimer";
+
 import { SelectedShapeActions, ShapesSwitcher } from "./Actions";
 import { LoadingMessage } from "./LoadingMessage";
 import { MobileMenu } from "./MobileMenu";
@@ -167,6 +169,7 @@ const LayerUI = ({
   const tunnels = useInitializeTunnels();
 
   const reactions = useEmojiReactions(app, appState, canvas);
+  const countdownTimer = useCountdownTimer(app);
 
   const TunnelsJotaiProvider = tunnels.tunnelsJotai.Provider;
 
@@ -343,6 +346,7 @@ const LayerUI = ({
                               onSelectReactionEmoji={
                                 reactions.handleSelectReactionEmoji
                               }
+                              onStartCountdownTimer={countdownTimer.startTimer}
                             />
                           </Stack.Row>
                         </Island>
@@ -398,6 +402,20 @@ const LayerUI = ({
                                   />
                                 </div>
                               )}
+                          </Island>
+                        )}
+                        {countdownTimer.isActive && (
+                          <Island
+                            style={{
+                              marginLeft: 8,
+                              alignSelf: "center",
+                              height: "fit-content",
+                            }}
+                          >
+                            <CountdownTimerPanel
+                              timers={countdownTimer.timers}
+                              onCancel={countdownTimer.cancelTimer}
+                            />
                           </Island>
                         )}
                       </Stack.Row>

@@ -309,7 +309,12 @@
     "lockElements": "Toggle Lock for selected elements",
     "zoomToFit": "Zoom to fit all elements",
     "insertEmoji": "Insert Emoji",
-    "emojiReactions": "Emoji reactions"
+    "emojiReactions": "Emoji reactions",
+    "countdownTimer": "Countdown timer",
+    "countdownTimerSet": "Set timer",
+    "countdownTimerMinutes": "Min",
+    "countdownTimerSeconds": "Sec",
+    "countdownTimerStart": "Start"
   },
   "element": {
     "rectangle": "Rectangle",

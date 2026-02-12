@@ -122,6 +122,7 @@ export interface CollabAPI {
   getActiveRoomLink: CollabInstance["getActiveRoomLink"];
   setCollabError: CollabInstance["setErrorDialog"];
   broadcastEmojiReaction: CollabInstance["broadcastEmojiReaction"];
+  broadcastCountdownTimer: CollabInstance["broadcastCountdownTimer"];
 }
 
 interface CollabProps {
@@ -222,6 +223,27 @@ class Collab extends PureComponent<CollabProps, CollabState> {
     }
   };
 
+  // Broadcast countdown timer state to other clients
+  broadcastCountdownTimer = async (
+    remainingSeconds: number,
+    startedBy: string,
+    active: boolean,
+  ) => {
+    try {
+      const data = {
+        type: WS_SUBTYPES.COUNTDOWN_TIMER,
+        payload: {
+          remainingSeconds,
+          startedBy,
+          active,
+        },
+      } as SocketUpdateData;
+      await this.portal._broadcastSocketData(data, true);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   componentDidMount() {
     window.addEventListener(EVENT.BEFORE_UNLOAD, this.beforeUnload);
     window.addEventListener("online", this.onOfflineStatusToggle);
@@ -256,6 +278,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
       getActiveRoomLink: this.getActiveRoomLink,
       setCollabError: this.setErrorDialog,
       broadcastEmojiReaction: this.broadcastEmojiReaction,
+      broadcastCountdownTimer: this.broadcastCountdownTimer,
     };
 
     appJotaiStore.set(collabAPIAtom, collabAPI);
@@ -677,6 +700,21 @@ class Collab extends PureComponent<CollabProps, CollabState> {
                 emoji,
                 x,
                 y,
+              });
+            } catch (e) {
+              console.error(e);
+            }
+            break;
+          }
+
+          case WS_SUBTYPES.COUNTDOWN_TIMER: {
+            try {
+              const { remainingSeconds, startedBy, active } =
+                decryptedData.payload;
+              this.excalidrawAPI?.dispatchIncomingCountdownTimer?.({
+                remainingSeconds,
+                startedBy,
+                active,
               });
             } catch (e) {
               console.error(e);

@@ -50,6 +50,7 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
     onScrollChange,
     onDuplicate,
     onRequestBroadcastEmojiReaction,
+    onRequestBroadcastCountdownTimer,
     children,
     validateEmbeddable,
     renderEmbeddable,
@@ -144,6 +145,7 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
           onScrollChange={onScrollChange}
           onDuplicate={onDuplicate}
           onRequestBroadcastEmojiReaction={onRequestBroadcastEmojiReaction}
+          onRequestBroadcastCountdownTimer={onRequestBroadcastCountdownTimer}
           validateEmbeddable={validateEmbeddable}
           renderEmbeddable={renderEmbeddable}
           aiEnabled={aiEnabled !== false}

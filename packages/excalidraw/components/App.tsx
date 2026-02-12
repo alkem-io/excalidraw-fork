@@ -707,6 +707,17 @@ class App extends React.Component<AppProps, AppState> {
     [payload: { id: string; emoji: string; x: number; y: number }]
   >();
 
+  // Incoming ephemeral UI events (countdown timer)
+  onIncomingCountdownTimerEmitter = new Emitter<
+    [
+      payload: {
+        remainingSeconds: number;
+        startedBy: string;
+        active: boolean;
+      },
+    ]
+  >();
+
   onScrollChangeEmitter = new Emitter<
     [scrollX: number, scrollY: number, zoom: AppState["zoom"]]
   >();
@@ -796,6 +807,8 @@ class App extends React.Component<AppProps, AppState> {
         onUserFollow: (cb) => this.onUserFollowEmitter.on(cb),
         dispatchIncomingEmojiReaction: (payload) =>
           this.onIncomingEmojiReactionEmitter.trigger(payload),
+        dispatchIncomingCountdownTimer: (payload) =>
+          this.onIncomingCountdownTimerEmitter.trigger(payload),
       } as const;
       if (typeof excalidrawAPI === "function") {
         excalidrawAPI(api);
