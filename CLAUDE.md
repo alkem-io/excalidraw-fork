@@ -32,3 +32,24 @@ yarn fix             # Auto-fix formatting and linting issues
 - Internal packages use path aliases (see `vitest.config.mts`)
 - Build system uses esbuild for packages, Vite for the app
 - TypeScript throughout with strict configuration
+
+
+## Fork
+In this case, this is @alkemio/excalidraw, a fork of the original Excalidraw repository.
+Alkemio's custom version is as similar as possible to the original to avoid conflicts when updating from master.
+
+### List of differences with standard Excalidraw
+- Selected from a non-yet-released Excalidraw version that is already upgraded to React 19.
+- Added ZoomToFit button to the zoom toolbar.
+- Modified the paste functionality to avoid pasting elements (such as images) as JSON when editing text.
+- Changed the toolbar Lock button behavior. Now it locks/unlocks elements instead of the tool in use.
+- Changed the load from file behavior to fix multi-user collaboration bug. Now elements loaded will be inserted in the current scene instead of replacing all the elements of the scene.
+- Added emoji insert tool
+- Added emoji realtime reaction broadcast tool
+
+### Development process
+Avoiding conflicts when merging from master is very important to us, Excalidraw is being actively developed and we are only adding some extra features:
+- Try to make as less as possible modifications to the original files
+- When adding features try to separate them as much as possible in new files
+- When adding translations, add them only in the english file and at the end of the file unless it makes a lot of sense to insert them somewhere else
+- Don't touch config files, don't upgrade packages, don't change the build process, always try to make customizations available from outside through the API rather than changing things inside the package
