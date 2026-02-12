@@ -1,0 +1,13 @@
+/* Reactions UI – floating emoji & badge only; panel uses shared emoji-submenu classes */
+.floating-emoji {
+  will-change: transform, opacity;
+}
+.reaction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.reaction-badge-count {
+  font-size: 12px;
+  opacity: 0.9;
+}

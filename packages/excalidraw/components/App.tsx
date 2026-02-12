@@ -794,8 +794,6 @@ class App extends React.Component<AppProps, AppState> {
         onPointerUp: (cb) => this.onPointerUpEmitter.on(cb),
         onScrollChange: (cb) => this.onScrollChangeEmitter.on(cb),
         onUserFollow: (cb) => this.onUserFollowEmitter.on(cb),
-        onIncomingEmojiReaction: (cb) =>
-          this.onIncomingEmojiReactionEmitter.on(cb),
         dispatchIncomingEmojiReaction: (payload) =>
           this.onIncomingEmojiReactionEmitter.trigger(payload),
       } as const;
@@ -6712,7 +6710,8 @@ class App extends React.Component<AppProps, AppState> {
       );
     } else if (
       this.state.activeTool.type !== "eraser" &&
-      this.state.activeTool.type !== "hand"
+      this.state.activeTool.type !== "hand" &&
+      this.state.activeTool.type !== TOOL_TYPE.emojiReaction
     ) {
       this.createGenericElementOnPointerDown(
         this.state.activeTool.type,

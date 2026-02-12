@@ -308,7 +308,7 @@
     "convertElementType": "Toggle shape type",
     "lockElements": "Toggle Lock for selected elements",
     "zoomToFit": "Zoom to fit all elements",
-    "emoji": "Insert Emoji",
+    "insertEmoji": "Insert Emoji",
     "emojiReactions": "Emoji reactions"
   },
   "element": {

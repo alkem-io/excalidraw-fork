@@ -155,7 +155,8 @@ export type ToolType =
   | "frame"
   | "magicframe"
   | "embeddable"
-  | "laser";
+  | "laser"
+  | "emojiReaction";
 
 export type ElementOrToolType = ExcalidrawElementType | ToolType | "custom";
 
@@ -879,14 +880,6 @@ export interface ExcalidrawImperativeAPI {
     callback: (payload: OnUserFollowedPayload) => void,
   ) => UnsubscribeCallback;
   // Incoming ephemeral UI events: emoji reactions (from Collab). Coordinates are scene/whiteboard coords.
-  onIncomingEmojiReaction: (
-    callback: (payload: {
-      id: string;
-      emoji: string;
-      x: number;
-      y: number;
-    }) => void,
-  ) => UnsubscribeCallback;
   dispatchIncomingEmojiReaction: (payload: {
     id: string;
     emoji: string;

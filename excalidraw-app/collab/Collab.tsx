@@ -6,7 +6,7 @@ import {
   reconcileElements,
 } from "@excalidraw/excalidraw";
 import { ErrorDialog } from "@excalidraw/excalidraw/components/ErrorDialog";
-import { APP_NAME, EVENT } from "@excalidraw/common";
+import { APP_NAME, EVENT, randomId } from "@excalidraw/common";
 import {
   IDLE_THRESHOLD,
   ACTIVE_THRESHOLD,
@@ -212,7 +212,7 @@ class Collab extends PureComponent<CollabProps, CollabState> {
           emoji,
           x,
           y,
-          id: `${this.portal.roomId}_${Date.now()}`,
+          id: `${this.portal.roomId}_${randomId()}_${Date.now()}`,
         },
       } as SocketUpdateData;
       // use volatile channel so reactions don't get queued behind more important updates like scene updates or cursor movements

@@ -1,47 +1,6 @@
 @import "open-color/open-color";
 @import "../css/variables.module.scss";
-
-/* Reactions UI */
-.emoji-picker-panel {
-  background-color: var(--color-surface-lowest);
-  border: 1px solid var(--default-border-color);
-  box-shadow: var(--shadow-island);
-  padding: 8px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.emoji-picker-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 36px);
-  gap: 6px;
-}
-.emoji-picker-btn {
-  width: 36px;
-  height: 36px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:6px;
-  background:transparent;
-  border: none;
-  cursor: pointer;
-}
-.emoji-picker-btn:hover { background: rgba(0,0,0,0.04); }
-.floating-emoji {
-  will-change: transform, opacity;
-}
-.reaction-badge {
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-}
-.reaction-badge-count {
-  font-size: 12px;
-  opacity: 0.9;
-}
-
+@import './EmojiReactions.scss';
 
 .excalidraw {
   .layer-ui__wrapper.animate {
@@ -158,53 +117,16 @@
       margin-bottom: auto;
     }
 
-    /* Reaction button styles (toolbar) */
-    .ReactionModeButton {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      padding: 4px;
-      border-radius: var(--border-radius-lg);
-      color: var(--icon-fill-color);
-    }
-
-    .ReactionModeButton:hover {
-      background: var(--button-hover-bg, rgba(0, 0, 0, 0.05));
-    }
-
-    .ReactionModeButton__emoji {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .ReactionModeButton__emoji svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .ReactionModeButton--active {
-      background: var(--color-primary-light, #E0DFFF);
-      color: var(--color-primary, #6965db);
-    }
-
     .reaction-toolbar-button {
-      // ensure the button inside the Island is visually aligned with others
+      margin-left: 4px;
+      align-self: center;
+      height: fit-content;
     }
 
     .footer-controls {
       display: flex;
       gap: 8px;
       align-items: center;
-    }
-
-    .emoji-picker-wrapper--fab {
-      position: fixed;
-      z-index: 3000;
-      pointer-events: auto;
     }
   }
 }

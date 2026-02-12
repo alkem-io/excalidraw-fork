@@ -165,22 +165,21 @@ const LayerUI = ({
   const device = useDevice();
   const tunnels = useInitializeTunnels();
 
+  /* Begin Emoji reactions */
   // Emoji / reactions state
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [floatingEmojis, setFloatingEmojis] = useState<
     Array<{ id: string; emoji: string; sceneX: number; sceneY: number }>
   >([]);
-  const [reactionModeActive, setReactionModeActive] = useState(false);
+  const reactionModeActive =
+    appState.activeTool.type === TOOL_TYPE.emojiReaction;
   const [reactionEmoji, setReactionEmoji] = useState<string | null>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const lastSpawnRef = useRef<number>(0);
   const [showReactionCoach, setShowReactionCoach] = useState(false);
   const lastToggleTimeRef = useRef<number>(0);
   const [overlayDisabled, setOverlayDisabled] = useState(false);
   const overlayDisableTimeoutRef = useRef<number | null>(null);
-  const [pickerPos, setPickerPos] = useState<{
-    left: number;
-    bottom: number;
-  } | null>(null);
 
   // Subscribe to incoming ephemeral UI events from collab
   useEffect(() => {
@@ -201,14 +200,10 @@ const LayerUI = ({
     };
   }, [app]);
 
-  // initialize persisted state and keyboard shortcut
+  // initialize coach mark and keyboard shortcut
   useEffect(() => {
     if (!isTestEnv()) {
       try {
-        const persisted = localStorage.getItem("excalidraw.reactionModeActive");
-        if (persisted === "true") {
-          setReactionModeActive(true);
-        }
         const coachSeen = localStorage.getItem(
           "excalidraw.reactionModeCoachSeen",
         );
@@ -239,38 +234,29 @@ const LayerUI = ({
     };
   }, []);
 
-  // compute picker position anchored to the toolbar reaction button
+  // close emoji picker on click outside
   useEffect(() => {
     if (!showEmojiPicker) {
-      setPickerPos(null);
       return;
     }
-
-    const compute = () => {
-      const btn = document.querySelector<HTMLElement>(
-        ".reaction-toolbar-button",
-      );
-      if (btn) {
-        const rect = btn.getBoundingClientRect();
-        // place below the toolbar button, aligned to its right edge
-        const left = rect.right;
-        const bottom = window.innerHeight - rect.bottom - 8;
-        setPickerPos({ left, bottom });
-      } else {
-        // fallback
-        setPickerPos({ left: window.innerWidth - 24, bottom: 96 });
+    const onPointerDown = (e: PointerEvent) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(e.target as Node)
+      ) {
+        setShowEmojiPicker(false);
       }
     };
-
-    compute();
-    window.addEventListener("resize", compute);
-    window.addEventListener("scroll", compute);
+    // use a timeout so the opening click itself doesn't immediately close it
+    const id = window.setTimeout(
+      () => window.addEventListener("pointerdown", onPointerDown),
+      0,
+    );
     return () => {
-      window.removeEventListener("resize", compute);
-      window.removeEventListener("scroll", compute);
+      window.clearTimeout(id);
+      window.removeEventListener("pointerdown", onPointerDown);
     };
   }, [showEmojiPicker]);
-
 
   const spawnEmoji = useCallback(
     (clientX: number, clientY: number) => {
@@ -428,46 +414,67 @@ const LayerUI = ({
       overlayDisableTimeoutRef.current = null;
     }, 350) as unknown as number;
 
-    setReactionModeActive((active) => {
-      // turn off
-      if (active) {
-        setReactionEmoji(null);
-        setShowEmojiPicker(false);
-        if (!isTestEnv()) {
-          try {
-            localStorage.setItem("excalidraw.reactionModeActive", "false");
-          } catch (err) { }
-        }
-        return false;
-      }
+    // turn off
+    if (reactionModeActive) {
+      setReactionEmoji(null);
+      setShowEmojiPicker(false);
+      app.setActiveTool({ type: "selection" });
+      return;
+    }
 
-      // turn on but no emoji selected -> open picker first
-      if (!reactionEmoji) {
-        setShowEmojiPicker(true);
-        if (!isTestEnv()) {
-          try {
-            localStorage.setItem("excalidraw.reactionModeActive", "false");
-          } catch (err) { }
-        }
-        return false;
-      }
+    // turn on but no emoji selected -> open picker first
+    if (!reactionEmoji) {
+      setShowEmojiPicker(true);
+      return;
+    }
 
-      // turn on with emoji selected
+    // turn on with emoji selected
+    if (!isTestEnv()) {
+      try {
+        if (showReactionCoach) {
+          localStorage.setItem("excalidraw.reactionModeCoachSeen", "true");
+          setShowReactionCoach(false);
+        }
+      } catch (err) { }
+    }
+    try {
+      lastToggleTimeRef.current = performance.now();
+    } catch (err) { }
+    app.setActiveTool({ type: TOOL_TYPE.emojiReaction });
+  }, [reactionModeActive, reactionEmoji, showReactionCoach, app]);
+
+  /** Called from both the dropdown submenu and the toolbar-button submenu */
+  const handleSelectReactionEmoji = useCallback(
+    (emoji: string) => {
+      setReactionEmoji(emoji);
+      setShowEmojiPicker(false);
+
+      try {
+        lastToggleTimeRef.current = performance.now();
+      } catch (err) { }
+      setOverlayDisabled(true);
+      if (overlayDisableTimeoutRef.current) {
+        window.clearTimeout(overlayDisableTimeoutRef.current);
+      }
+      overlayDisableTimeoutRef.current = window.setTimeout(() => {
+        setOverlayDisabled(false);
+        overlayDisableTimeoutRef.current = null;
+      }, 350) as unknown as number;
+
       if (!isTestEnv()) {
         try {
-          localStorage.setItem("excalidraw.reactionModeActive", "true");
           if (showReactionCoach) {
             localStorage.setItem("excalidraw.reactionModeCoachSeen", "true");
             setShowReactionCoach(false);
           }
         } catch (err) { }
       }
-      try {
-        lastToggleTimeRef.current = performance.now();
-      } catch (err) { }
-      return true;
-    });
-  }, [reactionEmoji, showReactionCoach]);
+      app.setActiveTool({ type: TOOL_TYPE.emojiReaction });
+    },
+    [showReactionCoach, app],
+  );
+
+  /* End emojis */
 
   const TunnelsJotaiProvider = tunnels.tunnelsJotai.Provider;
 
@@ -641,8 +648,7 @@ const LayerUI = ({
                               activeTool={appState.activeTool}
                               UIOptions={UIOptions}
                               app={app}
-                              onToggleReactionMode={toggleReactionMode}
-                              reactionModeActive={reactionModeActive}
+                            onSelectReactionEmoji={handleSelectReactionEmoji}
                             />
                           </Stack.Row>
                         </Island>
@@ -666,20 +672,29 @@ const LayerUI = ({
                             />
                           </Island>
                         )}
-                        <Island
-                          className="reaction-toolbar-button"
-                          style={{
-                            marginLeft: 8,
-                            alignSelf: "center",
-                            height: "fit-content",
-                          }}
-                        >
+                      <Island
+                        className="reaction-toolbar-button"
+                        style={{ position: "relative" }}
+                      >
                           <ReactionModeButton
-                            active={reactionModeActive}
-                            onClick={toggleReactionMode}
-                            size="small"
-                            label="Emoji reactions (R)"
+                            title={t("toolBar.emojiReactions")}
+                            checked={reactionModeActive}
+                            onChange={toggleReactionMode}
+                            isMobile
                           />
+                        {showEmojiPicker && !reactionModeActive && (
+                          <div
+                            ref={emojiPickerRef}
+                            className="emoji-submenu__panel emoji-submenu__panel--below"
+                            data-testid="emoji-picker-wrapper"
+                          >
+                            <EmojiPickerPanel
+                              onSelect={(emoji) => {
+                                handleSelectReactionEmoji(emoji);
+                              }}
+                            />
+                          </div>
+                        )}
                         </Island>
                       </Stack.Row>
                     </Stack.Col>
@@ -900,8 +915,9 @@ const LayerUI = ({
                   position: "absolute",
                   inset: 0,
                   cursor: "pointer",
-                  zIndex: 2, // below toolbar (z-index 10) but above canvas
+                  zIndex: -1, // below toolbar
                   pointerEvents: overlayDisabled ? "none" : "auto",
+                  background: "rgba(255, 0, 0, 0.5)", //!!
                 }}
                 onPointerMove={(e) => {
                   scheduleForwardPointerUpdate(
@@ -965,34 +981,6 @@ const LayerUI = ({
               showExitZenModeBtn={showExitZenModeBtn}
               renderWelcomeScreen={renderWelcomeScreen}
             />
-
-            {showEmojiPicker && !reactionModeActive && (
-              <div
-                className="emoji-picker-wrapper--fab"
-                data-testid="emoji-picker-wrapper"
-                style={
-                  pickerPos
-                    ? {
-                        position: "fixed",
-                        left: pickerPos.left,
-                        bottom: pickerPos.bottom,
-                        transform: "translateX(-100%)",
-                        zIndex: 3000,
-                        pointerEvents: "auto",
-                      }
-                    : undefined
-                }
-              >
-                <EmojiPickerPanel
-                  onSelect={(emoji) => {
-                    setReactionEmoji(emoji);
-                    setShowEmojiPicker(false);
-                    setReactionModeActive(true);
-                  }}
-                  onClose={() => setShowEmojiPicker(false)}
-                />
-              </div>
-            )}
 
             {appState.scrolledOutside && (
               <button

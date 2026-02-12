@@ -56,13 +56,13 @@ import { ToolButton } from "./ToolButton";
 import { Tooltip } from "./Tooltip";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
 import EmojiPicker from "./EmojiPicker";
+import ReactionEmojiSubmenu from "./ReactionEmojiSubmenu";
 import {
   EmbedIcon,
   extraToolsIcon,
   frameToolIcon,
   mermaidLogoIcon,
   laserPointerToolIcon,
-  reactionToolIcon,
   MagicIcon,
   LassoIcon,
 } from "./icons";
@@ -287,15 +287,13 @@ export const ShapesSwitcher = ({
   appState,
   app,
   UIOptions,
-  onToggleReactionMode,
-  reactionModeActive,
+  onSelectReactionEmoji,
 }: {
   activeTool: UIAppState["activeTool"];
   appState: UIAppState;
   app: AppClassProperties;
   UIOptions: AppProps["UIOptions"];
-  onToggleReactionMode?: () => void;
-  reactionModeActive?: boolean;
+  onSelectReactionEmoji?: (emoji: string) => void;
 }) => {
   const [isExtraToolsMenuOpen, setIsExtraToolsMenuOpen] = useState(false);
 
@@ -436,19 +434,15 @@ export const ShapesSwitcher = ({
           <DropdownMenu.ItemCustom data-testid="toolbar-emoji">
             <EmojiPicker onInsert={() => setIsExtraToolsMenuOpen(false)} />
           </DropdownMenu.ItemCustom>
-          {onToggleReactionMode && (
-            <DropdownMenu.Item
-              onSelect={() => {
-                setIsExtraToolsMenuOpen(false);
-                onToggleReactionMode();
-              }}
-              icon={reactionToolIcon}
-              data-testid="toolbar-reactions"
-              selected={!!reactionModeActive}
-              shortcut="R"
-            >
-              {t("toolBar.emojiReactions")}
-            </DropdownMenu.Item>
+          {onSelectReactionEmoji && (
+            <DropdownMenu.ItemCustom data-testid="toolbar-reactions">
+              <ReactionEmojiSubmenu
+                onSelect={(emoji) => {
+                  setIsExtraToolsMenuOpen(false);
+                  onSelectReactionEmoji(emoji);
+                }}
+              />
+            </DropdownMenu.ItemCustom>
           )}
           <div style={{ margin: "6px 0", fontSize: 14, fontWeight: 600 }}>
             Generate

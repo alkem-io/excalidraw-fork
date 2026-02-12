@@ -1,50 +1,43 @@
-import React from "react";
 import clsx from "clsx";
 
-export const ReactionModeButton = ({
-  active,
-  onClick,
-  size = "small",
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  size?: "small" | "large";
-  label?: string;
-}) => {
-  const isLarge = size === "large";
+import "./ToolIcon.scss";
 
-  return (
-    <button
-      type="button"
-      className={clsx("ReactionModeButton", {
-        "ReactionModeButton--large": isLarge,
-        "ReactionModeButton--active": active,
-      })}
-      aria-label={label || "Toggle emoji reaction mode"}
-      aria-pressed={active}
-      title={label || (active ? "Exit reaction mode" : "Emoji reactions")}
-      onPointerDown={(e) => {
-        // prevent overlay under the FAB from receiving this pointerdown
-        e.stopPropagation();
-      }}
-      onClick={() => {
-        onClick();
-      }}
-    >
-      <span className="ReactionModeButton__emoji" aria-hidden>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <mask id="mask0_3_7" style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-            <rect width="24" height="24" fill="#D9D9D9" />
-          </mask>
-          <g mask="url(#mask0_3_7)">
-            <path d="M18 21H7V8L14 1L15.25 2.25C15.3667 2.36667 15.4625 2.525 15.5375 2.725C15.6125 2.925 15.65 3.11667 15.65 3.3V3.65L14.55 8H21C21.5333 8 22 8.2 22.4 8.6C22.8 9 23 9.46667 23 10V12C23 12.1167 22.9833 12.2417 22.95 12.375C22.9167 12.5083 22.8833 12.6333 22.85 12.75L19.85 19.8C19.7 20.1333 19.45 20.4167 19.1 20.65C18.75 20.8833 18.3833 21 18 21ZM9 19H18L21 12V10H12L13.35 4.5L9 8.85V19ZM7 8V10H4V19H7V21H2V8H7Z" fill="currentColor" />
-          </g>
-        </svg>
-      </span>
-      {isLarge && <span className="ReactionModeButton__label">{label || "Reactions"}</span>}
-    </button>
-  );
+import { reactionToolIcon } from "./icons";
+
+import type { ToolButtonSize } from "./ToolButton";
+
+type ReactionModeButtonProps = {
+  title?: string;
+  name?: string;
+  checked: boolean;
+  onChange?(): void;
+  isMobile?: boolean;
 };
 
-ReactionModeButton.displayName = "ReactionModeButton";
+const DEFAULT_SIZE: ToolButtonSize = "small";
+
+export const ReactionModeButton = (props: ReactionModeButtonProps) => {
+  return (
+    <label
+      className={clsx(
+        "ToolIcon ToolIcon__ReactionMode",
+        `ToolIcon_size_${DEFAULT_SIZE}`,
+        {
+          "is-mobile": props.isMobile,
+        },
+      )}
+      title={`${props.title}`}
+    >
+      <input
+        className="ToolIcon_type_checkbox"
+        type="checkbox"
+        name={props.name}
+        onChange={props.onChange}
+        checked={props.checked}
+        aria-label={props.title}
+        data-testid="toolbar-ReactionMode"
+      />
+      <div className="ToolIcon__icon">{reactionToolIcon}</div>
+    </label>
+  );
+};
