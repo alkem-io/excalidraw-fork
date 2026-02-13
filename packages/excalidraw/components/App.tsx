@@ -11171,12 +11171,14 @@ class App extends React.Component<AppProps, AppState> {
     (
       event: WheelEvent | React.WheelEvent<HTMLDivElement | HTMLCanvasElement>,
     ) => {
-      // if not scrolling on canvas/wysiwyg, ignore
+      // if not scrolling on canvas/wysiwyg/reaction-overlay, ignore
       if (
         !(
           event.target instanceof HTMLCanvasElement ||
           event.target instanceof HTMLTextAreaElement ||
-          event.target instanceof HTMLIFrameElement
+          event.target instanceof HTMLIFrameElement ||
+          (event.target instanceof HTMLElement &&
+            event.target.classList.contains("reaction-overlay"))
         )
       ) {
         // prevent zooming the browser (but allow scrolling DOM)

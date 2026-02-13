@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import type { UseEmojiReactionsResult } from "./useEmojiReactions";
 
@@ -19,8 +19,71 @@ export const ReactionOverlay: React.FC<ReactionOverlayProps> = ({
   spawnEmoji,
   scheduleForwardPointerUpdate,
 }) => {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const spaceHeldRef = useRef(false);
+  const [spaceHeld, setSpaceHeld] = useState(false);
+
+  // Track space key for space+drag panning pass-through
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" || e.key === " ") {
+        spaceHeldRef.current = true;
+        setSpaceHeld(true);
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space" || e.key === " ") {
+        spaceHeldRef.current = false;
+        setSpaceHeld(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
+
+  const forwardEventToCanvas = useCallback(
+    (e: React.PointerEvent) => {
+      const overlay = overlayRef.current;
+      if (!overlay) {
+        return;
+      }
+      // Temporarily disable pointer-events so elementFromPoint finds canvas
+      overlay.style.pointerEvents = "none";
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      if (target) {
+        target.dispatchEvent(new PointerEvent("pointerdown", e.nativeEvent));
+      }
+      // Re-enable after panning ends
+      const reEnable = () => {
+        if (overlay) {
+          overlay.style.pointerEvents =
+            overlayDisabled || spaceHeldRef.current ? "none" : "auto";
+        }
+        window.removeEventListener("pointerup", reEnable);
+      };
+      window.addEventListener("pointerup", reEnable);
+    },
+    [overlayDisabled],
+  );
+
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
+      // Forward non-left-click (e.g. middle-click pan) to canvas
+      if (e.button !== 0) {
+        forwardEventToCanvas(e);
+        return;
+      }
+
+      // Forward space+drag to canvas for panning
+      if (spaceHeldRef.current) {
+        forwardEventToCanvas(e);
+        return;
+      }
+
       // ignore immediate pointerdown that comes from toggling via toolbar button
       try {
         const now = performance.now();
@@ -58,6 +121,7 @@ export const ReactionOverlay: React.FC<ReactionOverlayProps> = ({
       window.addEventListener("pointerup", up);
     },
     [
+      forwardEventToCanvas,
       lastToggleTimeRef,
       reactionCursorButtonRef,
       lastSpawnRef,
@@ -66,14 +130,19 @@ export const ReactionOverlay: React.FC<ReactionOverlayProps> = ({
     ],
   );
 
+  // When space is held or overlay is disabled, pointer-events: none
+  // allows all events to pass through to canvas for pan/zoom
+  const effectivePointerEvents = overlayDisabled || spaceHeld ? "none" : "auto";
+
   return (
     <div
+      ref={overlayRef}
       className="reaction-overlay"
       style={{
         position: "absolute",
         inset: 0,
         cursor: "pointer",
-        pointerEvents: overlayDisabled ? "none" : "auto",
+        pointerEvents: effectivePointerEvents,
       }}
       onPointerMove={(e) => {
         scheduleForwardPointerUpdate(e.clientX, e.clientY, e.pointerId);
