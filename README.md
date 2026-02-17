@@ -1,10 +1,10 @@
-
 <p align="center"><a href="https://www.alkemio.org/" target="blank"><img src="https://alkem.io/logo.png" width="400" alt="Alkemio Logo" /></a></p>
 <p align="center"><i>Enabling society to collaborate. Building a better future, together.</i></p>
 
 ## Alkemio fork of Excalidraw
 
 ### List of differences with standard Excalidraw
+
 - Selected from a non-yet-released Excalidraw version that is already upgraded to React 19.
 - Added ZoomToFit button to the zoom toolbar.
 - Modified the paste functionality to avoid pasting elements (such as images) as JSON when editing text.
@@ -17,7 +17,9 @@
 - ~~Added `hideLibraryButton` to the appState to be able to hide the button from outside~~ not anymore
 
 ### Testing locally inside Alkemio client
+
 > Note: needs to be reviewed, last time I tried this it didn't work well
+
 ```bash
 cd packages/excalidraw
 npm link
@@ -26,8 +28,9 @@ npm link @alkemio/excalidraw --save
 ```
 
 ### Developing/debugging Excalidraw by itself
-Excalidraw comes with a test application which loads a whiteboard in the browser's local storage and renders just the Excalidraw component.
-It can be run at
+
+Excalidraw comes with a test application which loads a whiteboard in the browser's local storage and renders just the Excalidraw component. It can be run at
+
 ```bash
 cd packages/excalidraw
 yarn
@@ -35,16 +38,15 @@ yarn start
 ```
 
 ### Developer Notes
+
 - All our modifications are merged to `develop` branch.
 - `master` branch is the original Excalidraw's `master` branch as is. By the time of writing this readme, it is unstable and shouldn't be released to production.
 - Some tags and branches are kept in the repo from previous versions released, but before version 0.18.0 we were not following the instructions in this Readme, so things may be inconsistent.
 - The version naming is as follows: vX.X.X-HHHHH-alkemio-R. Being X the original version of the Excalidraw's package, HHHHH the hash of the last commit applied (if any, normally we just release the Excalidraw's released commit, so this HHHHH is omitted), and R is the counter of released Alkemio packages.
 
-
 ### Upgrade procedure
-Everytime Excalidraw releases a new package, they publish it in their [GitHub/releases](https://github.com/excalidraw/excalidraw/releases), Github indicates in which commit they have based the release.
-For example release 0.18.0 is based on commit 817d8c553c3389650f8b4503984a6d4a5d2f0c11
-If we want to base our release on a later commit applied in their master branch, we also can, but we have made the agreement of appending that hash to the package name (that's the appended hash -HHHHH-)
+
+Everytime Excalidraw releases a new package, they publish it in their [GitHub/releases](https://github.com/excalidraw/excalidraw/releases), Github indicates in which commit they have based the release. For example release 0.18.0 is based on commit 817d8c553c3389650f8b4503984a6d4a5d2f0c11 If we want to base our release on a later commit applied in their master branch, we also can, but we have made the agreement of appending that hash to the package name (that's the appended hash -HHHHH-)
 
 ```bash
   git fetch --tags upstream
@@ -75,6 +77,7 @@ If we want to base our release on a later commit applied in their master branch,
 Create a Pull Request to develop in excalidraw-fork repository
 
 ### Automatic build and publish the new npm package (✅ preferred method)
+
 - Create a new Release in the [releases page](https://github.com/alkem-io/excalidraw-fork/releases)
   - Select the pushed branch and create a tag accordingly
   - Set the title to `Release <new-branch-name>`
@@ -85,12 +88,13 @@ Create a Pull Request to develop in excalidraw-fork repository
 - Create a PR on the client using the new package
 
 ##### GitHub and NPM configuration for the automatic publishing
+
 - A npm a access token has been added to the project's secrets to allow the github action publishing the package.
 - The npm access token is of type Classic > Automation, then added to the repository Settings > Secrets, called `NPM_TOKEN`.
 
 ### Manually build locally and publish the new npm package (❌ see before, the preferred method)
-Verify in `packages/excalidraw/package.json` the version of the package to be published `'alkemio-X'` and make sure the version matches the number that should be published.
-`yarn:publish` is going to ask for the version number again and it can bump the number but you can just repeat the current version number if it's correct.
+
+Verify in `packages/excalidraw/package.json` the version of the package to be published `'alkemio-X'` and make sure the version matches the number that should be published. `yarn:publish` is going to ask for the version number again and it can bump the number but you can just repeat the current version number if it's correct.
 
 ```bash
 yarn
@@ -102,36 +106,44 @@ yarn publish
 ```
 
 ## Change Log
+
 ### v0.18.0-864353b-alkemio-8
+
 - Released a new package because the previous one (plain 0.18.0) was not compatible with React 19.
 
 ### v0.18.0-alkemio-2
+
 - Removed unused customizations (zoomToFit and hideLibraryButton)
 - Cleaned up Readme and made version updates easier
 
 ### v0.19.0-alkemio-1
+
 - Released by mistake without Alkemio customizations
 
 ### Alkemio fork of Excalidraw v0.18.0-alkemio-1
+
 - Version bump to `0.18.0-alkemio-1`
 
 ### Alkemio fork of Excalidraw v0.17.0-alkemio-8
+
 - Version bump to `0.17.1-alkemio-8`
 - `reconcileElements` exposed to the public API
 - `addElementsFromPasteOrLibrary` exposed to the public API
 - opening a file now inserts elements in the current scene. Does not overwrite them anymore.
 
 ### Alkemio fork of Excalidraw v0.17.0-alkemio-4
+
 - Added `hideLibraryButton` to the appState to be able to hide the button from outside.
 - Changed the toolbar Lock button behavior. Now it locks/unlocks elements instead of the tool in use
 
 ### Alkemio fork of Excalidraw v0.17.0-alkemio-3-beta
+
 - Changed behavior. Pasting elements is better handled and now it doesn't end up as a big text node with JSON inside.
 
 ### Alkemio fork of Excalidraw v0.17.0
+
 - Upgraded from Excalidraw v0.16.1 to v0.17.0
 - Applied the new styles of the buttons to Alkemio's ZoomToFit added button.
-
 
 ### Alkemio fork of Excalidraw v0.16.1
 
@@ -178,8 +190,7 @@ yarn publish
     yarn build
     yarn build:package
     ```
-  - Go to your client-web folder and change the `@alkemio/excalidraw` package version to the relative path of the package:
-    eg: `"@alkemio/excalidraw": "../excalidraw-fork/packages/excalidraw"`
+  - Go to your client-web folder and change the `@alkemio/excalidraw` package version to the relative path of the package: eg: `"@alkemio/excalidraw": "../excalidraw-fork/packages/excalidraw"`
   - Execute: `pnpm i` in the root of the client-web. From now on, your project is using the local excalidraw package and not a published one.
 - When you're done with the development commit and push everything, create a Pull Request in the alkem-io/excalidraw repository to merge your branch to develop.
 - Once is merged to `develop`, checkout `develop` branch and see below how to build and publish the package to NPM repository.
@@ -197,7 +208,6 @@ yarn publish
 ```
 
 <hr />
-
 
 <a href="https://excalidraw.com/" target="_blank" rel="noopener">
   <picture>

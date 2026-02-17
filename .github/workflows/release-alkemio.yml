@@ -3,7 +3,7 @@ on:
   release:
     types: [published]
 permissions:
-  id-token: write  # Required for OIDC
+  id-token: write # Required for OIDC
   contents: read
 
 jobs:
@@ -13,11 +13,11 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 2
-      - name: Setup Node.js 20.x
+      - name: Setup Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
       - name: Set up publish access
         run: |
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}

@@ -63,6 +63,7 @@ export const useEmojiReactions = (
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const lastSpawnRef = useRef<number>(0);
   const lastToggleTimeRef = useRef<number>(0);
+  const toggleReactionModeRef = useRef<() => void>(() => {});
   const overlayDisableTimeoutRef = useRef<number | null>(null);
 
   // pointer-forwarding refs
@@ -98,7 +99,7 @@ export const useEmojiReactions = (
     };
   }, [app]);
 
-  // initialize coach mark and keyboard shortcut
+  // initialize coach mark
   useEffect(() => {
     if (!isTestEnv()) {
       try {
@@ -112,16 +113,27 @@ export const useEmojiReactions = (
         // ignore localStorage errors
       }
     }
+  }, []);
 
+  // keyboard shortcut
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLElement &&
+        (e.target.isContentEditable ||
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement ||
+          e.target instanceof HTMLSelectElement)
+      ) {
+        return;
+      }
       if (e.key === "r" || e.key === "R") {
-        toggleReactionMode();
+        toggleReactionModeRef.current();
       }
     };
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // cleanup overlay disable timeout
@@ -343,6 +355,11 @@ export const useEmojiReactions = (
     app.setActiveTool({ type: TOOL_TYPE.emojiReaction });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reactionModeActive, reactionEmoji, showReactionCoach, app]);
+
+  // keep ref in sync so the keydown listener never goes stale
+  useEffect(() => {
+    toggleReactionModeRef.current = toggleReactionMode;
+  }, [toggleReactionMode]);
 
   const handleSelectReactionEmoji = useCallback(
     (emoji: string) => {

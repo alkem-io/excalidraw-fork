@@ -58,8 +58,8 @@ export const useCountdownTimer = (
 
     try {
       app.props.onRequestBroadcastCountdownTimer?.(0, ownerId, false);
-    } catch (e) {
-      // ignore
+    } catch (error: any) {
+      console.error("Failed to broadcast countdown timer cancellation", error);
     }
   }, [clearLocalInterval, app]);
 
@@ -94,8 +94,8 @@ export const useCountdownTimer = (
           userId,
           true,
         );
-      } catch (e) {
-        // ignore
+      } catch (error: any) {
+        console.error("Failed to broadcast countdown timer start", error);
       }
 
       intervalRef.current = setInterval(() => {
@@ -115,8 +115,8 @@ export const useCountdownTimer = (
 
         try {
           app.props.onRequestBroadcastCountdownTimer?.(next, userId, true);
-        } catch (e) {
-          // ignore
+        } catch (error: any) {
+          console.error("Failed to broadcast countdown timer tick", error);
         }
       }, 1000);
     },

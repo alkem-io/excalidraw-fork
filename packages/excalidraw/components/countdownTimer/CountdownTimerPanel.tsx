@@ -2,13 +2,14 @@ import React from "react";
 
 import { CloseIcon } from "../icons";
 
-import type { CountdownTimerEntry } from "./useCountdownTimer";
-
 import "./CountdownTimer.scss";
 
+import type { CountdownTimerEntry } from "./useCountdownTimer";
+
 const formatTime = (totalSeconds: number): string => {
-  const m = Math.floor(Math.max(0, totalSeconds) / 60);
-  const s = Math.max(0, totalSeconds) % 60;
+  const clamped = Math.floor(Math.max(0, totalSeconds));
+  const m = Math.floor(clamped / 60);
+  const s = clamped % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
 
@@ -33,7 +34,6 @@ export const CountdownTimerPanel: React.FC<{
             className={`countdown-timer-row${
               warning ? " countdown-timer-row--warning" : ""
             }${critical ? " countdown-timer-row--critical" : ""}`}
-            title={timer.startedBy}
           >
             <span className="countdown-timer-row__time">
               {formatTime(timer.remainingSeconds)}

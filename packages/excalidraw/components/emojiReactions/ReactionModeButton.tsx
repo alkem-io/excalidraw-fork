@@ -27,7 +27,7 @@ export const ReactionModeButton = (props: ReactionModeButtonProps) => {
           "is-mobile": props.isMobile,
         },
       )}
-      title={`${props.title}`}
+      title={props.title}
     >
       <input
         className="ToolIcon_type_checkbox"

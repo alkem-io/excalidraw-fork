@@ -1,4 +1,10 @@
-import { useState, useRef, useLayoutEffect, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useLayoutEffect,
+  useCallback,
+  useEffect,
+} from "react";
 
 import { convertToExcalidrawElements } from "../data/transform";
 import { t } from "../i18n";
@@ -41,6 +47,24 @@ const EmojiPicker = ({ onInsert }: { onInsert: () => void }) => {
     }
   }, [isOpen, updatePanelPosition]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        !triggerRef.current?.contains(target) &&
+        !panelRef.current?.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () =>
+      document.removeEventListener("pointerdown", handleClickOutside);
+  }, [isOpen]);
+
   const handleInsertEmoji = (emoji: string) => {
     const elements = convertToExcalidrawElements([
       { type: "text", text: emoji, x: 0, y: 0, fontSize: EMOJI_FONT_SIZE },
@@ -64,7 +88,9 @@ const EmojiPicker = ({ onInsert }: { onInsert: () => void }) => {
         aria-expanded={isOpen}
       >
         <div className="dropdown-menu-item__icon">{EmojiIcon}</div>
-        <div className="dropdown-menu-item__text">{t("toolBar.insertEmoji")}</div>
+        <div className="dropdown-menu-item__text">
+          {t("toolBar.insertEmoji")}
+        </div>
         <span className="emoji-submenu__chevron" aria-hidden="true">
           ›
         </span>

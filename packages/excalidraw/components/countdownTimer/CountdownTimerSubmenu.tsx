@@ -1,4 +1,10 @@
-import { useState, useRef, useLayoutEffect, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useLayoutEffect,
+  useCallback,
+  useEffect,
+} from "react";
 
 import { t } from "../../i18n";
 
@@ -38,6 +44,24 @@ const CountdownTimerSubmenu = ({
       updatePanelPosition();
     }
   }, [isOpen, updatePanelPosition]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        !triggerRef.current?.contains(target) &&
+        !panelRef.current?.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () =>
+      document.removeEventListener("pointerdown", handleClickOutside);
+  }, [isOpen]);
 
   return (
     <div className="emoji-submenu" data-testid="toolbar-countdown-timer">
