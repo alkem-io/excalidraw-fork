@@ -30,12 +30,21 @@ const CountdownTimerSubmenu = ({
       return;
     }
     const rect = trigger.getBoundingClientRect();
-    let top = rect.top;
+    const panelWidth = panel.offsetWidth;
     const panelHeight = panel.offsetHeight;
+
+    // keep panel within viewport horizontally
+    let left = rect.right + 4;
+    if (left + panelWidth > window.innerWidth) {
+      left = rect.left - panelWidth - 4;
+    }
+    // keep panel within viewport vertically
+    let top = rect.top;
     if (top + panelHeight > window.innerHeight) {
       top = window.innerHeight - panelHeight - 4;
     }
-    panel.style.left = `${rect.right + 4}px`;
+
+    panel.style.left = `${Math.max(4, left)}px`;
     panel.style.top = `${Math.max(4, top)}px`;
   }, []);
 

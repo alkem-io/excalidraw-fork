@@ -56,7 +56,6 @@ export const useEmojiReactions = (
   const reactionModeActive =
     appState.activeTool.type === TOOL_TYPE.emojiReaction;
   const [reactionEmoji, setReactionEmoji] = useState<string | null>(null);
-  const [showReactionCoach, setShowReactionCoach] = useState(false);
   const [overlayDisabled, setOverlayDisabled] = useState(false);
 
   // --- refs ---
@@ -98,22 +97,6 @@ export const useEmojiReactions = (
       unsubEmoji?.();
     };
   }, [app]);
-
-  // initialize coach mark
-  useEffect(() => {
-    if (!isTestEnv()) {
-      try {
-        const coachSeen = localStorage.getItem(
-          "excalidraw.reactionModeCoachSeen",
-        );
-        if (!coachSeen) {
-          setShowReactionCoach(true);
-        }
-      } catch (e) {
-        // ignore localStorage errors
-      }
-    }
-  }, []);
 
   // keyboard shortcut
   useEffect(() => {
@@ -208,9 +191,8 @@ export const useEmojiReactions = (
   const dismissCoachMark = () => {
     if (!isTestEnv()) {
       try {
-        if (showReactionCoach) {
+        if (!localStorage.getItem("excalidraw.reactionModeCoachSeen")) {
           localStorage.setItem("excalidraw.reactionModeCoachSeen", "true");
-          setShowReactionCoach(false);
         }
       } catch (err) {
         // ignore
@@ -353,8 +335,7 @@ export const useEmojiReactions = (
       // ignore
     }
     app.setActiveTool({ type: TOOL_TYPE.emojiReaction });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reactionModeActive, reactionEmoji, showReactionCoach, app]);
+  }, [reactionModeActive, reactionEmoji, app]);
 
   // keep ref in sync so the keydown listener never goes stale
   useEffect(() => {
@@ -375,8 +356,7 @@ export const useEmojiReactions = (
       dismissCoachMark();
       app.setActiveTool({ type: TOOL_TYPE.emojiReaction });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [showReactionCoach, app],
+    [app],
   );
 
   const removeFloatingEmoji = useCallback((id: string) => {

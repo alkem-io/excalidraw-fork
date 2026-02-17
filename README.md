@@ -10,8 +10,9 @@
 - Modified the paste functionality to avoid pasting elements (such as images) as JSON when editing text.
 - Changed the toolbar Lock button behavior. Now it locks/unlocks elements instead of the tool in use.
 - Changed the load from file behavior to fix multi-user collaboration bug. Now elements loaded will be inserted in the current scene instead of replacing all the elements of the scene.
-- Added emoji insert tool
-- Added emoji realtime reaction broadcast tool
+- Added emoji insert tool.
+- Added emoji realtime reaction broadcast tool.
+- Added a shared broadcasted timer tool.
 - ~~ZoomToFit feature exposed through the external API~~ not anymore
 - ~~Added ZoomToFit flag to initialData to fit items on load~~ not anymore
 - ~~Added `hideLibraryButton` to the appState to be able to hide the button from outside~~ not anymore
