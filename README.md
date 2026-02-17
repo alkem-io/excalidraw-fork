@@ -127,11 +127,14 @@ yarn publish
 ```
 
 ## Change Log
-### v0.18.0-864353b-alkemio-11
+### v0.18.0-864353b-alkemio-12
 - Added the following functionality:
   - Emoji insert into the whiteboard
   - Realtime broadcast of emoji reactions
   - Realtime countdown timer
+
+### v0.18.0-864353b-alkemio-10 & v0.18.0-864353b-alkemio-11
+- Tests releases for v0.18.0-864353b-alkemio-12
 
 ### v0.18.0-864353b-alkemio-8
 
