@@ -18,15 +18,35 @@
 - ~~Added `hideLibraryButton` to the appState to be able to hide the button from outside~~ not anymore
 
 ### Testing locally inside Alkemio client
-
-> Note: needs to be reviewed, last time I tried this it didn't work well
+Checkout both projects Alkemio `client-web` and `excalidraw-fork` in the same folder, and modify Alkemio's package.json:
+```json
+{
+  ...
+  "dependencies": {
+    "@alkemio/excalidraw": "../excalidraw-fork/packages/excalidraw",
+    ...
+  }
+  ...
+}
+```
+The excalidraw package needs to be built:
 
 ```bash
-cd packages/excalidraw
-npm link
-cd ../../../client-web
-npm link @alkemio/excalidraw --save
+cd excalidraw-fork
+# Maybe not needed - Excalidraw requires Node 18.0.0 - 22.x.x by the time of writing this
+nvm use 22
+# Cleans up any previous builds
+yarn rm:build
+# Cleans up any previously installed packages
+yarn rm:node_modules
+# Build Excalidraw package
+yarn install
+yarn build
+yarn build:package
 ```
+
+Then run `pnpm install` on the client.
+
 
 ### Developing/debugging Excalidraw by itself
 
@@ -107,6 +127,11 @@ yarn publish
 ```
 
 ## Change Log
+### v0.18.0-864353b-alkemio-11
+- Added the following functionality:
+  - Emoji insert into the whiteboard
+  - Realtime broadcast of emoji reactions
+  - Realtime countdown timer
 
 ### v0.18.0-864353b-alkemio-8
 

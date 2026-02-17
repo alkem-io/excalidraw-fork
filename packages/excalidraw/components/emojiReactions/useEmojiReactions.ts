@@ -270,15 +270,19 @@ export const useEmojiReactions = (
         },
       );
 
-      app.props.onPointerUpdate({
-        pointer: {
-          x: sceneX,
-          y: sceneY,
-          tool: app.state.activeTool.type === "laser" ? "laser" : "pointer",
-        },
-        button: reactionCursorButtonRef.current,
-        pointersMap,
-      });
+      try {
+        app.props.onPointerUpdate({
+          pointer: {
+            x: sceneX,
+            y: sceneY,
+            tool: app.state.activeTool.type === "laser" ? "laser" : "pointer",
+          },
+          button: reactionCursorButtonRef.current,
+          pointersMap,
+        });
+      } catch (e) {
+        console.warn("Failed to forward pointer update", e);
+      }
     },
     [app, appState.zoom, canvas],
   );
