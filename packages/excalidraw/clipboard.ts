@@ -369,10 +369,7 @@ export const parseClipboard = (
   event: ClipboardEvent,
   isPlainPaste = false,
 ): ClipboardData => {
-  const parsedEventData = parseClipboardEventTextData(
-    event,
-    isPlainPaste,
-  );
+  const parsedEventData = parseClipboardEventTextData(event, isPlainPaste);
 
   if (parsedEventData.type === "mixedContent") {
     return {

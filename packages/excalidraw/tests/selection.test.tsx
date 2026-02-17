@@ -3,14 +3,12 @@ import { vi } from "vitest";
 
 import { KEYS, reseed } from "@excalidraw/common";
 
-import { SHAPES } from "../components/shapes";
-
 import { Excalidraw } from "../index";
 import * as InteractiveCanvas from "../renderer/interactiveScene";
 import * as StaticScene from "../renderer/staticScene";
 
 import { API } from "./helpers/api";
-import { Keyboard, Pointer, UI } from "./helpers/ui";
+import { Keyboard, Pointer } from "./helpers/ui";
 import {
   render,
   fireEvent,
