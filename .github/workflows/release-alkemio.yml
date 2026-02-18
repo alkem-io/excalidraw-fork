@@ -20,19 +20,12 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - name: Auto release
         run: |
-          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
           yarn
           cd packages/excalidraw
           yarn install
           yarn build:esm
           yarn pack
-          echo "npmAuthToken: \"${NPM_TOKEN}\"" >> .yarnrc.yml
-          echo "----"
-          cat .yarnrc.yml
-          echo "----"
-          npm whoami --registry=https://registry.npmjs.org || (echo "Not authenticated to npm")
-          npm config get //registry.npmjs.org/:_authToken | sed 's/./*/g'
-          yarn publish --non-interactive --new-version $(jq -r '.version' package.json) --access public
-          cd ../..
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          npm publish $(ls *.tgz) --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
