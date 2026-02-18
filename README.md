@@ -12,7 +12,7 @@
 - Changed the load from file behavior to fix multi-user collaboration bug. Now elements loaded will be inserted in the current scene instead of replacing all the elements of the scene.
 - Added emoji insert tool.
 - Added emoji realtime reaction broadcast tool.
-- Added a shared broadcasted timer tool.
+- Added a shared broadcasted countdown timer tool.
 - ~~ZoomToFit feature exposed through the external API~~ not anymore
 - ~~Added ZoomToFit flag to initialData to fit items on load~~ not anymore
 - ~~Added `hideLibraryButton` to the appState to be able to hide the button from outside~~ not anymore
@@ -50,7 +50,7 @@ yarn build:package
 
 Then run `pnpm install` on the client.
 
-### Developing/debugging Excalidraw by itself
+### Developing/debugging Excalidraw standalone
 
 Excalidraw comes with a test application which loads a whiteboard in the browser's local storage and renders just the Excalidraw component. It can be run at
 
@@ -101,15 +101,16 @@ Create a Pull Request to develop in excalidraw-fork repository
 
 ### Automatic build and publish the new npm package (✅ preferred method)
 
-- Create a new Release in the [releases page](https://github.com/alkem-io/excalidraw-fork/releases)
-  - Select the pushed branch and create a tag accordingly
-  -
-  - Set the title to `Release <new-branch-name>`
-  - Auto generate release notes
-  - Publish the release
-- The [action](https://github.com/alkem-io/excalidraw-fork/actions) should run automatically
+- Update manually the version number in `packages/excalidraw/package.json` - See versioning conventions before.
+- Make sure all your changes are merged to develop, although a different branch can be selected for the release for testing purposes.
+- Draft a new Release in the [releases page](https://github.com/alkem-io/excalidraw-fork/releases).
+  - Create a new tag `v${package.json version}` and select the branch from which you want to release.
+  - Set the title for this release.
+  - Auto generate release notes.
+  - Publish the release.
+- The [action](https://github.com/alkem-io/excalidraw-fork/actions/workflows/release-alkemio.yml) should run automatically
 - The package should appear in [npmjs](https://www.npmjs.com/package/@alkemio/excalidraw) shortly
-- Create a PR on the client using the new package
+- Create a PR on the client using the new package, change package.json to the new version and don't forget to run `pnpm i`.
 
 ##### GitHub and NPM configuration for the automatic publishing
 - Github's: alkem-io/excalidraw-fork repository has been added as Trusted Publisher in the npmjs repository to be able to publish from the GitHub Actions without tokens.
