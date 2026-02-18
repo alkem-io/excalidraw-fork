@@ -26,5 +26,5 @@ jobs:
           cd packages/excalidraw
           yarn install
           yarn build:esm
-          yarn pack
-          npm publish $(ls *.tgz) --access public
+          yarn pack --filename package.tgz
+          npm publish package.tgz --access public --tag latest
