@@ -129,7 +129,7 @@ yarn publish
 
 ## Change Log
 
-### v0.18.0-864353b-alkemio-12
+### v0.18.0-864353b-alkemio-14
 
 - Added the following functionality:
   - Emoji insert into the whiteboard
@@ -212,33 +212,7 @@ yarn publish
 
 #### Development guidelines
 
-- First of all, Excalidraw uses yarn as package manager, so first thing to do is make sure you have yarn installed in your system. `npm install --global yarn`.
-- Clone the repository to a local folder: `git clone git@github.com:alkem-io/excalidraw.git` and create a feature branch to store your work.
-- Follow the original Excalidraw instructions below to run and debug with the included test application - Just `yarn ; yarn start` should work.
-- To test/debug Excalidraw inside our client-web application:
-  - Run in the excalidraw-fork root folder:
-    ```
-    yarn rm:build
-    yarn clean-install
-    yarn build
-    yarn build:package
-    ```
-  - Go to your client-web folder and change the `@alkemio/excalidraw` package version to the relative path of the package: eg: `"@alkemio/excalidraw": "../excalidraw-fork/packages/excalidraw"`
-  - Execute: `pnpm i` in the root of the client-web. From now on, your project is using the local excalidraw package and not a published one.
-- When you're done with the development commit and push everything, create a Pull Request in the alkem-io/excalidraw repository to merge your branch to develop.
-- Once is merged to `develop`, checkout `develop` branch and see below how to build and publish the package to NPM repository.
-- Make sure you switch back the package in your client-web to use the published @alkemio/excalidraw package's new version instead of the old one or the linked one if you changed it.
-
-#### Build and publish a new npm package:
-
-```
-yarn
-cd src/packages/excalidraw
-yarn install
-yarn build:umd
-yarn pack
-yarn publish
-```
+Removed for clarity of this document. Available in previous commits.
 
 <hr />
 
