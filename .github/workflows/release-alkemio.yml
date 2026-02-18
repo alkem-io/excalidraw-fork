@@ -18,13 +18,9 @@ jobs:
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
-      - name: Set up publish access
-        run: |
-          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Auto release
         run: |
+          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
           yarn
           cd packages/excalidraw
           yarn install
@@ -38,3 +34,5 @@ jobs:
           npm config get //registry.npmjs.org/:_authToken | sed 's/./*/g'
           yarn publish --non-interactive --new-version $(jq -r '.version' package.json) --access public
           cd ../..
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
