@@ -13,10 +13,10 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 2
-      - name: Setup Node.js 22.x
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "22.14.0"
           registry-url: "https://registry.npmjs.org"
       - name: Auto release
         run: |
@@ -25,7 +25,4 @@ jobs:
           yarn install
           yarn build:esm
           yarn pack
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           npm publish $(ls *.tgz) --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
