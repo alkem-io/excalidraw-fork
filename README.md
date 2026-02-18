@@ -103,6 +103,7 @@ Create a Pull Request to develop in excalidraw-fork repository
 
 - Create a new Release in the [releases page](https://github.com/alkem-io/excalidraw-fork/releases)
   - Select the pushed branch and create a tag accordingly
+  -
   - Set the title to `Release <new-branch-name>`
   - Auto generate release notes
   - Publish the release
@@ -111,9 +112,7 @@ Create a Pull Request to develop in excalidraw-fork repository
 - Create a PR on the client using the new package
 
 ##### GitHub and NPM configuration for the automatic publishing
-
-- A npm a access token has been added to the project's secrets to allow the github action publishing the package.
-- The npm access token is of type Classic > Automation, then added to the repository Settings > Secrets, called `NPM_TOKEN`.
+- Github's: alkem-io/excalidraw-fork repository has been added as Trusted Publisher in the npmjs repository to be able to publish from the GitHub Actions without tokens.
 
 ### Manually build locally and publish the new npm package (❌ see before, the preferred method)
 
@@ -252,7 +251,7 @@ yarn publish
 
 <h4 align="center">
   <a href="https://excalidraw.com">Excalidraw Editor</a> |
-  <a href="https://blog.excalidraw.com">Blog</a> |
+  <a href="https://plus.excalidraw.com/blog">Blog</a> |
   <a href="https://docs.excalidraw.com">Documentation</a> |
   <a href="https://plus.excalidraw.com">Excalidraw+</a>
 </h4>
@@ -335,13 +334,11 @@ We'll be adding these features as drop-in plugins for the npm package in the fut
 
 **Note:** following instructions are for installing the Excalidraw [npm package](https://www.npmjs.com/package/@excalidraw/excalidraw) when integrating Excalidraw into your own app. To run the repository locally for development, please refer to our [Development Guide](https://docs.excalidraw.com/docs/introduction/development).
 
-```
+Use `npm` or `yarn` to install the package.
+
+```bash
 npm install react react-dom @excalidraw/excalidraw
-```
-
-or via yarn
-
-```
+# or
 yarn add react react-dom @excalidraw/excalidraw
 ```
 

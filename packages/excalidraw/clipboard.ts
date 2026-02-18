@@ -330,6 +330,8 @@ export const readSystemClipboard = async () => {
 
 /**
  * Parses "paste" ClipboardEvent.
+ * Alkemio Edit: this is marked as async in the original Excalidraw's code but it doesn't actually need to be,
+ * and we need to call it from a non-async context somewhere else.
  */
 const parseClipboardEventTextData = (
   event: ClipboardEvent,
