@@ -14,10 +14,13 @@ import "./CountdownTimer.scss";
 
 const CountdownTimerSubmenu = ({
   onStart,
+  isOpen,
+  onToggle,
 }: {
   onStart: (minutes: number, seconds: number) => void;
+  isOpen: boolean;
+  onToggle: () => void;
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [minutes, setMinutes] = useState(5);
   const [seconds, setSeconds] = useState(0);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -64,13 +67,13 @@ const CountdownTimerSubmenu = ({
         !triggerRef.current?.contains(target) &&
         !panelRef.current?.contains(target)
       ) {
-        setIsOpen(false);
+        onToggle();
       }
     };
     document.addEventListener("pointerdown", handleClickOutside);
     return () =>
       document.removeEventListener("pointerdown", handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, onToggle]);
 
   return (
     <div className="emoji-submenu" data-testid="toolbar-countdown-timer">
@@ -78,7 +81,7 @@ const CountdownTimerSubmenu = ({
         ref={triggerRef}
         className="emoji-submenu__trigger dropdown-menu-item dropdown-menu-item-base"
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
         aria-expanded={isOpen}
       >
         <div className="dropdown-menu-item__icon">{countdownTimerIcon}</div>
@@ -130,7 +133,9 @@ const CountdownTimerSubmenu = ({
               className="countdown-timer-submenu__start"
               onClick={() => {
                 if (minutes > 0 || seconds > 0) {
-                  setIsOpen(false);
+                  if (isOpen) {
+                    onToggle();
+                  }
                   onStart(minutes, seconds);
                 }
               }}

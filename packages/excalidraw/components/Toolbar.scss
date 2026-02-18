@@ -22,6 +22,8 @@
       }
     }
 
+    /* Added by Alkemio to support bigger buttons in the toolbar
+    (sometimes there are multiple countdowns running) */
     height: fit-content;
   }
 

@@ -34,7 +34,7 @@ import {
   ReactionModeButton,
   ReactionOverlay,
   FloatingEmojisLayer,
-} from "./emojiReactions";
+} from "./emojis/emojiReactions";
 
 import { useCountdownTimer, CountdownTimerPanel } from "./countdownTimer";
 

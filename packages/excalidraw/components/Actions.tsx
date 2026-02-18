@@ -55,8 +55,8 @@ import Stack from "./Stack";
 import { ToolButton } from "./ToolButton";
 import { Tooltip } from "./Tooltip";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
-import EmojiPicker from "./EmojiPicker";
-import ReactionEmojiSubmenu from "./emojiReactions/ReactionEmojiSubmenu";
+import EmojiPicker from "./emojis/insertEmoji/EmojiPicker";
+import ReactionEmojiSubmenu from "./emojis/emojiReactions/ReactionEmojiSubmenu";
 import CountdownTimerSubmenu from "./countdownTimer/CountdownTimerSubmenu";
 import {
   EmbedIcon,
@@ -299,6 +299,7 @@ export const ShapesSwitcher = ({
   onStartCountdownTimer?: (minutes: number, seconds: number) => void;
 }) => {
   const [isExtraToolsMenuOpen, setIsExtraToolsMenuOpen] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
   const frameToolSelected = activeTool.type === "frame";
   const laserToolSelected = activeTool.type === "laser";
@@ -396,8 +397,14 @@ export const ShapesSwitcher = ({
             : extraToolsIcon}
         </DropdownMenu.Trigger>
         <DropdownMenu.Content
-          onClickOutside={() => setIsExtraToolsMenuOpen(false)}
-          onSelect={() => setIsExtraToolsMenuOpen(false)}
+          onClickOutside={() => {
+            setIsExtraToolsMenuOpen(false);
+            setOpenSubmenu(null);
+          }}
+          onSelect={() => {
+            setIsExtraToolsMenuOpen(false);
+            setOpenSubmenu(null);
+          }}
           className="App-toolbar__extra-tools-dropdown"
         >
           <DropdownMenu.Item
@@ -435,7 +442,13 @@ export const ShapesSwitcher = ({
             {t("toolBar.lasso")}
           </DropdownMenu.Item>
           <DropdownMenu.ItemCustom data-testid="toolbar-emoji">
-            <EmojiPicker onInsert={() => setIsExtraToolsMenuOpen(false)} />
+            <EmojiPicker
+              onInsert={() => setIsExtraToolsMenuOpen(false)}
+              isOpen={openSubmenu === "emoji"}
+              onToggle={() =>
+                setOpenSubmenu(openSubmenu === "emoji" ? null : "emoji")
+              }
+            />
           </DropdownMenu.ItemCustom>
           {onSelectReactionEmoji && (
             <DropdownMenu.ItemCustom data-testid="toolbar-reactions">
@@ -444,6 +457,12 @@ export const ShapesSwitcher = ({
                   setIsExtraToolsMenuOpen(false);
                   onSelectReactionEmoji(emoji);
                 }}
+                isOpen={openSubmenu === "reactions"}
+                onToggle={() =>
+                  setOpenSubmenu(
+                    openSubmenu === "reactions" ? null : "reactions",
+                  )
+                }
               />
             </DropdownMenu.ItemCustom>
           )}
@@ -454,6 +473,12 @@ export const ShapesSwitcher = ({
                   setIsExtraToolsMenuOpen(false);
                   onStartCountdownTimer(minutes, seconds);
                 }}
+                isOpen={openSubmenu === "countdown"}
+                onToggle={() =>
+                  setOpenSubmenu(
+                    openSubmenu === "countdown" ? null : "countdown",
+                  )
+                }
               />
             </DropdownMenu.ItemCustom>
           )}

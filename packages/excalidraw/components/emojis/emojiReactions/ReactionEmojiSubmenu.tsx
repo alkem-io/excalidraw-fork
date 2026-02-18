@@ -1,19 +1,22 @@
-import { useState, useRef, useLayoutEffect, useCallback } from "react";
+import { useRef, useLayoutEffect, useCallback } from "react";
 
-import { t } from "../../i18n";
+import { t } from "../../../i18n";
 
-import { reactionToolIcon } from "../icons";
+import { reactionToolIcon } from "../../icons";
 
-import "../EmojiPicker.scss";
+import "../insertEmoji/EmojiPicker.scss";
 
 import { EmojiPickerPanel } from "./EmojiPickerPanel";
 
 const ReactionEmojiSubmenu = ({
   onSelect,
+  isOpen,
+  onToggle,
 }: {
   onSelect: (emoji: string) => void;
+  isOpen: boolean;
+  onToggle: () => void;
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +57,7 @@ const ReactionEmojiSubmenu = ({
         ref={triggerRef}
         className="emoji-submenu__trigger dropdown-menu-item dropdown-menu-item-base"
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
         aria-expanded={isOpen}
       >
         <div className="dropdown-menu-item__icon">{reactionToolIcon}</div>
@@ -69,7 +72,9 @@ const ReactionEmojiSubmenu = ({
         <div ref={panelRef} className="emoji-submenu__panel">
           <EmojiPickerPanel
             onSelect={(emoji) => {
-              setIsOpen(false);
+              if (isOpen) {
+                onToggle();
+              }
               onSelect(emoji);
             }}
           />

@@ -1,25 +1,27 @@
-import {
-  useState,
-  useRef,
-  useLayoutEffect,
-  useCallback,
-  useEffect,
-} from "react";
+import { useRef, useLayoutEffect, useCallback, useEffect } from "react";
 
-import { convertToExcalidrawElements } from "../data/transform";
-import { t } from "../i18n";
+import { convertToExcalidrawElements } from "../../../data/transform";
+import { t } from "../../../i18n";
 
-import { useApp } from "./App";
-import { EmojiIcon } from "./icons";
-import { defaultInsertEmojiConfig } from "./emojis/insertEmoji/insertEmojiConfig";
+import { useApp } from "../../App";
+import { EmojiIcon } from "../../icons";
+
+import { defaultInsertEmojiConfig } from "./insertEmojiConfig";
 
 import "./EmojiPicker.scss";
 
 const EMOJI_FONT_SIZE = 48;
 
-const EmojiPicker = ({ onInsert }: { onInsert: () => void }) => {
+const EmojiPicker = ({
+  onInsert,
+  isOpen,
+  onToggle,
+}: {
+  onInsert: () => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}) => {
   const app = useApp();
-  const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -65,20 +67,22 @@ const EmojiPicker = ({ onInsert }: { onInsert: () => void }) => {
         !triggerRef.current?.contains(target) &&
         !panelRef.current?.contains(target)
       ) {
-        setIsOpen(false);
+        onToggle();
       }
     };
     document.addEventListener("pointerdown", handleClickOutside);
     return () =>
       document.removeEventListener("pointerdown", handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, onToggle]);
 
   const handleInsertEmoji = (emoji: string) => {
     const elements = convertToExcalidrawElements([
       { type: "text", text: emoji, x: 0, y: 0, fontSize: EMOJI_FONT_SIZE },
     ]);
     app.onInsertElements(elements);
-    setIsOpen(false);
+    if (isOpen) {
+      onToggle();
+    }
     onInsert();
   };
 
@@ -92,7 +96,7 @@ const EmojiPicker = ({ onInsert }: { onInsert: () => void }) => {
         ref={triggerRef}
         className="emoji-submenu__trigger dropdown-menu-item dropdown-menu-item-base"
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
         aria-expanded={isOpen}
       >
         <div className="dropdown-menu-item__icon">{EmojiIcon}</div>

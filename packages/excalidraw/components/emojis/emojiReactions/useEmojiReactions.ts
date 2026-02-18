@@ -6,7 +6,7 @@ import {
   viewportCoordsToSceneCoords,
 } from "@excalidraw/common";
 
-import type { AppClassProperties, UIAppState } from "../../types";
+import type { AppClassProperties, UIAppState } from "../../../types";
 
 export interface FloatingEmojiData {
   id: string;

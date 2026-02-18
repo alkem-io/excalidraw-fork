@@ -4,7 +4,7 @@ import { sceneCoordsToViewportCoords } from "@excalidraw/common";
 
 import { FloatingEmoji } from "./FloatingEmoji";
 
-import type { AppClassProperties, UIAppState } from "../../types";
+import type { AppClassProperties, UIAppState } from "../../../types";
 
 import type { FloatingEmojiData } from "./useEmojiReactions";
 

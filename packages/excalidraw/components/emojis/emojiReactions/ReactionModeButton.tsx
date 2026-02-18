@@ -1,10 +1,10 @@
 import clsx from "clsx";
 
-import "../ToolIcon.scss";
+import "../../ToolIcon.scss";
 
-import { reactionToolIcon } from "../icons";
+import { reactionToolIcon } from "../../icons";
 
-import type { ToolButtonSize } from "../ToolButton";
+import type { ToolButtonSize } from "../../ToolButton";
 
 type ReactionModeButtonProps = {
   title?: string;
