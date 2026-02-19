@@ -603,6 +603,7 @@ const LayerUI = ({
           UIOptions={UIOptions}
           isCollaborating={isCollaborating}
           reactions={reactions}
+          countdownTimer={countdownTimer}
         />
       )}
       {!device.editor.isMobile && (
@@ -617,18 +618,6 @@ const LayerUI = ({
                 : {}
             }
           >
-            {reactions.reactionModeActive && reactions.reactionEmoji && (
-              <ReactionOverlay
-                overlayDisabled={reactions.overlayDisabled}
-                lastToggleTimeRef={reactions.lastToggleTimeRef}
-                reactionCursorButtonRef={reactions.reactionCursorButtonRef}
-                lastSpawnRef={reactions.lastSpawnRef}
-                spawnEmoji={reactions.spawnEmoji}
-                scheduleForwardPointerUpdate={
-                  reactions.scheduleForwardPointerUpdate
-                }
-              />
-            )}
             {renderWelcomeScreen && <tunnels.WelcomeScreenCenterTunnel.Out />}
             {renderFixedSideContainer()}
 
@@ -655,6 +644,16 @@ const LayerUI = ({
           </div>
           {renderSidebars()}
         </>
+      )}
+      {reactions.reactionModeActive && reactions.reactionEmoji && (
+        <ReactionOverlay
+          overlayDisabled={reactions.overlayDisabled}
+          lastToggleTimeRef={reactions.lastToggleTimeRef}
+          reactionCursorButtonRef={reactions.reactionCursorButtonRef}
+          lastSpawnRef={reactions.lastSpawnRef}
+          spawnEmoji={reactions.spawnEmoji}
+          scheduleForwardPointerUpdate={reactions.scheduleForwardPointerUpdate}
+        />
       )}
     </>
   );

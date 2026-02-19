@@ -23,7 +23,12 @@ import Stack from "./Stack";
 
 import { LockElementButton } from "./LockElementButton";
 
-import { EmojiPickerPanel } from "./emojis/emojiReactions";
+import { EmojiPickerPanel, ReactionModeButton } from "./emojis/emojiReactions";
+
+import {
+  CountdownTimerPanel,
+  type UseCountdownTimerResult,
+} from "./countdownTimer";
 
 import type { UseEmojiReactionsResult } from "./emojis/emojiReactions";
 
@@ -61,6 +66,7 @@ type MobileMenuProps = {
   app: AppClassProperties;
   isCollaborating: boolean;
   reactions: UseEmojiReactionsResult;
+  countdownTimer: UseCountdownTimerResult;
 };
 
 export const MobileMenu = ({
@@ -81,6 +87,7 @@ export const MobileMenu = ({
   app,
   isCollaborating,
   reactions,
+  countdownTimer,
 }: MobileMenuProps) => {
   const {
     WelcomeScreenCenterTunnel,
@@ -103,6 +110,10 @@ export const MobileMenu = ({
                       activeTool={appState.activeTool}
                       UIOptions={UIOptions}
                       app={app}
+                      onSelectReactionEmoji={
+                        reactions.handleSelectReactionEmoji
+                      }
+                      onStartCountdownTimer={countdownTimer.startTimer}
                     />
                   </Stack.Row>
                 </Island>
@@ -136,7 +147,6 @@ export const MobileMenu = ({
                     title={t("toolBar.hand")}
                     isMobile
                   />
-                  {/*
                   {isCollaborating && (
                     <ReactionModeButton
                       title={t("toolBar.emojiReactions")}
@@ -150,12 +160,25 @@ export const MobileMenu = ({
                       }
                     />
                   )}
-                  */}
                 </div>
               </Stack.Row>
             </Stack.Col>
           )}
         </Section>
+        {countdownTimer.isActive && (
+          <Island
+            style={{
+              marginLeft: 8,
+              alignSelf: "center",
+              height: "fit-content",
+            }}
+          >
+            <CountdownTimerPanel
+              timers={countdownTimer.timers}
+              onCancel={countdownTimer.cancelTimer}
+            />
+          </Island>
+        )}
         <HintViewer
           appState={appState}
           isMobile={true}

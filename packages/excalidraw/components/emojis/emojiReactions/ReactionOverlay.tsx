@@ -143,6 +143,11 @@ export const ReactionOverlay: React.FC<ReactionOverlayProps> = ({
         inset: 0,
         cursor: "pointer",
         pointerEvents: effectivePointerEvents,
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 3,
       }}
       onPointerMove={(e) => {
         scheduleForwardPointerUpdate(e.clientX, e.clientY, e.pointerId);
