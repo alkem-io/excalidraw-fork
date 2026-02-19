@@ -54,6 +54,13 @@
       z-index: 3000;
       pointer-events: auto;
     }
+    &--mobile {
+      position: absolute;
+      top: 120px;
+      right: 40px;
+      z-index: 3000;
+      pointer-events: auto;
+    }
   }
 
   .emoji-submenu__grid {

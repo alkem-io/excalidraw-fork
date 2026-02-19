@@ -10,15 +10,22 @@ import { t } from "../i18n";
 import { calculateScrollCenter } from "../scene";
 import { SCROLLBAR_WIDTH, SCROLLBAR_MARGIN } from "../scene/scrollbars";
 
+import { actionToggleElementLock } from "../actions";
+
 import { SelectedShapeActions, ShapesSwitcher } from "./Actions";
 import { FixedSideContainer } from "./FixedSideContainer";
 import { HandButton } from "./HandButton";
 import { HintViewer } from "./HintViewer";
 import { Island } from "./Island";
-import { LockButton } from "./LockButton";
 import { PenModeButton } from "./PenModeButton";
 import { Section } from "./Section";
 import Stack from "./Stack";
+
+import { LockElementButton } from "./LockElementButton";
+
+import { EmojiPickerPanel } from "./emojis/emojiReactions";
+
+import type { UseEmojiReactionsResult } from "./emojis/emojiReactions";
 
 import type { ActionManager } from "../actions/manager";
 import type {
@@ -52,6 +59,8 @@ type MobileMenuProps = {
   renderWelcomeScreen: boolean;
   UIOptions: AppProps["UIOptions"];
   app: AppClassProperties;
+  isCollaborating: boolean;
+  reactions: UseEmojiReactionsResult;
 };
 
 export const MobileMenu = ({
@@ -70,6 +79,8 @@ export const MobileMenu = ({
   renderWelcomeScreen,
   UIOptions,
   app,
+  isCollaborating,
+  reactions,
 }: MobileMenuProps) => {
   const {
     WelcomeScreenCenterTunnel,
@@ -108,11 +119,16 @@ export const MobileMenu = ({
                     isMobile
                     penDetected={appState.penDetected}
                   />
-                  <LockButton
-                    checked={appState.activeTool.locked}
-                    onChange={onLockToggle}
-                    title={t("toolBar.lock")}
-                    isMobile
+                  <LockElementButton
+                    disabled={
+                      Object.keys(appState.selectedElementIds).length === 0 &&
+                      appState.activeLockedId !== null
+                    }
+                    checked={!!appState.activeLockedId}
+                    onChange={() =>
+                      actionManager.executeAction(actionToggleElementLock)
+                    }
+                    title={t("toolBar.lockElements")}
                   />
                   <HandButton
                     checked={isHandToolActive(appState)}
@@ -120,6 +136,21 @@ export const MobileMenu = ({
                     title={t("toolBar.hand")}
                     isMobile
                   />
+                  {/*
+                  {isCollaborating && (
+                    <ReactionModeButton
+                      title={t("toolBar.emojiReactions")}
+                      checked={reactions.reactionModeActive}
+                      onChange={reactions.toggleReactionMode}
+                      isMobile
+                      activeEmoji={
+                        reactions.reactionModeActive
+                          ? reactions.reactionEmoji
+                          : null
+                      }
+                    />
+                  )}
+                  */}
                 </div>
               </Stack.Row>
             </Stack.Col>
@@ -163,12 +194,33 @@ export const MobileMenu = ({
     );
   };
 
+  const renderPopups = () => {
+    return (
+      <>
+        {reactions.showEmojiPicker && !reactions.reactionModeActive && (
+          <div
+            ref={reactions.emojiPickerRef}
+            className="emoji-submenu__panel emoji-submenu__panel--mobile"
+            data-testid="emoji-picker-wrapper"
+          >
+            <EmojiPickerPanel
+              onSelect={(emoji) => {
+                reactions.handleSelectReactionEmoji(emoji);
+              }}
+            />
+          </div>
+        )}
+      </>
+    );
+  };
+
   return (
     <>
       {renderSidebars()}
       {!appState.viewModeEnabled &&
         appState.openDialog?.name !== "elementLinkSelector" &&
         renderToolbar()}
+      {renderPopups()}
       <div
         className="App-bottom-bar"
         style={{

@@ -249,15 +249,6 @@ const LayerUI = ({
     </Section>
   );
 
-  const allElementsLocked = (elementsIds: string[]) => {
-    if (elementsIds.length === 0) {
-      return false;
-    }
-    return elements
-      .filter((element) => elementsIds.includes(element.id))
-      .every((element) => element.locked);
-  };
-
   const renderFixedSideContainer = () => {
     const shouldRenderSelectedShapeActions = showSelectedShapeActions(
       appState,
@@ -316,11 +307,10 @@ const LayerUI = ({
                             <LockElementButton
                               disabled={
                                 Object.keys(appState.selectedElementIds)
-                                  .length === 0
+                                  .length === 0 &&
+                                appState.activeLockedId !== null
                               }
-                              checked={allElementsLocked(
-                                Object.keys(appState.selectedElementIds),
-                              )}
+                              checked={!!appState.activeLockedId}
                               onChange={() =>
                                 actionManager.executeAction(
                                   actionToggleElementLock,
@@ -379,7 +369,6 @@ const LayerUI = ({
                               title={t("toolBar.emojiReactions")}
                               checked={reactions.reactionModeActive}
                               onChange={reactions.toggleReactionMode}
-                              isMobile
                               activeEmoji={
                                 reactions.reactionModeActive
                                   ? reactions.reactionEmoji
@@ -612,6 +601,8 @@ const LayerUI = ({
           device={device}
           renderWelcomeScreen={renderWelcomeScreen}
           UIOptions={UIOptions}
+          isCollaborating={isCollaborating}
+          reactions={reactions}
         />
       )}
       {!device.editor.isMobile && (
