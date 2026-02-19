@@ -98,27 +98,6 @@ export const useEmojiReactions = (
     };
   }, [app]);
 
-  // keyboard shortcut
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (
-        e.target instanceof HTMLElement &&
-        (e.target.isContentEditable ||
-          e.target instanceof HTMLInputElement ||
-          e.target instanceof HTMLTextAreaElement ||
-          e.target instanceof HTMLSelectElement)
-      ) {
-        return;
-      }
-      if (e.key === "r" || e.key === "R") {
-        toggleReactionModeRef.current();
-      }
-    };
-
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
   // cleanup overlay disable timeout
   useEffect(() => {
     return () => {
