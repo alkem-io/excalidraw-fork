@@ -60,7 +60,7 @@ Required keys present on every element (from `_ExcalidrawElementBase`):
 | `isDeleted` | boolean scalar | per-key LWW, true-wins on apply | tombstone, see §5 |
 | `groupIds` | **JSON-leaf** (`string[]`) | per-key LWW | ordered id list |
 | `frameId` | string \| null scalar | per-key LWW | |
-| `boundElements` | **JSON-leaf** (`{id,type}[]` \| null) | per-key LWW | see §4 |
+| `boundElements` | **nested `Y.Map<id, "arrow"\|"text">`** (add/remove set) | concurrent bind/unbind merges (add-wins) | see §4 |
 | `link` | string \| null scalar | per-key LWW | |
 | `locked` | boolean scalar | per-key LWW | element locking (persisted) |
 | `customData` | **JSON-leaf** (`Record<string,any>` \| undefined) | per-key LWW | open-ended Alkemio bag |
@@ -117,11 +117,15 @@ Representation tiering (the single most important rule in this model):
 - **JSON-leaf** (atomically-replaced multi-key/array values that do **not** need
   sub-merge) → stored as a single value (object/array directly as the Yjs value).
   Accept **per-key LWW** for the whole blob. Used for: `roundness`, `groupIds`,
-  `boundElements`, `startBinding`/`endBinding`/`fixedSegments`, `scale`, `crop`,
-  `customData`, and (v1) `points`/`pressures`.
-- **Nested Y type** (`Y.Array`/`Y.Map`) → only where genuine sub-merge is
-  required. **Not used in v1.** The OPEN-1 alternative for `points` is the only
-  candidate, deliberately deferred.
+  `startBinding`/`endBinding`/`fixedSegments`, `scale`, `crop`, `customData`,
+  and `points`/`pressures`.
+- **Nested Y type** (`Y.Array`/`Y.Map`) → where genuine sub-merge is required.
+  **Used in v1 for `boundElements`** → `Y.Map<boundId, "arrow"|"text">`, an
+  add/remove set (add = `set(id,type)`, remove = `delete(id)`) so concurrent
+  binding of *different* arrows/text to the **same** node merges instead of
+  whole-array LWW-clobbering (OPEN-1 resolved; see §4.1). `points`/`pressures`
+  (large, churny, single-author) and `groupIds` (order-sensitive nesting) stay
+  JSON-leaf; a nested `Y.Array` for `points` remains a deferred future option.
 
 Rationale: scalars cover the properties where concurrent multi-author edits are
 common (position, color, size). The JSON-leaf properties are almost always edited
@@ -134,6 +138,31 @@ one opaque register rather than relying on byte-equality for dedup.
 different *vertices of the same line* (both touching `points`) is per-blob LWW,
 not vertex-merged. A concurrent edit to `x` and `strokeColor` of the same element
 *is* merged. This asymmetry is intentional and bounded (OPEN-1).
+
+### 4.1 `boundElements` as an add/remove set (OPEN-1 resolved — hybrid)
+
+`boundElements` (the list of arrows/text bound to a bindable element) is the one
+array property where concurrent multi-author edits are realistic — two people each
+binding a *different* arrow to the same node. Whole-array LWW (today, and the
+JSON-leaf option) loses one binding; current Excalidraw `reconcileElements` loses
+it too (whole-element LWW). So it is modelled as a **nested `Y.Map`**:
+
+- Key = bound element `id`; value = `"arrow" | "text"`. Order is **not**
+  semantically meaningful (the fork consumes `boundElements` via `arrayToMap` /
+  `.find(x=>x.id)` / `.filter`), so a map is a faithful, lossless representation.
+- **onChange → Y.Map**: diff the element's `boundElements` array against the
+  `Y.Map`; `set(id,type)` for added ids, `delete(id)` for removed ids (under the
+  binding's origin). **apply (Y.Map → scene)**: materialize back into a
+  `BoundElement[]` array on the element.
+- **Add-wins** under concurrency: two different bindings to one node → two keys →
+  both survive. Same id bound twice → same key, idempotent.
+- **Invariant edge — "at most one bound text"**: concurrent binding of two
+  *different* text elements yields two `type:"text"` keys. Resolve
+  deterministically **on apply** (keep the lowest `id`, drop extra text bindings)
+  — a rare, self-healing conflict, not a divergence.
+
+This is the only nested Y type in v1; every other multi-key property stays
+JSON-leaf per §4.
 
 ---
 

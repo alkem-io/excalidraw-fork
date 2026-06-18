@@ -331,16 +331,19 @@ deep-equal up to the documented normalization rules (see data-model §6).
 
 ## Open Questions (for antst)
 
-- **OPEN-1 — `points` representation.** v1 plan: store `points` (and
-  `pressures`, `boundElements`, `groupIds`) as a **JSON-encoded leaf value**
-  (one `Y.Map` key, per-key LWW). This is simple and lossless but means a
-  concurrent edit to two *different vertices of the same line* does not merge
-  vertex-wise (whole-`points` LWW). Alternative: model `points` as a nested
-  `Y.Array<[x,y]>` for true sub-merge — heavier, and freehand `points` churn
-  rapidly (every drag appends), risking doc bloat and tombstone growth.
-  **Recommendation: ship JSON-leaf in v1** (matches how a `points` edit is almost
-  always a single-author gesture); revisit nested `Y.Array` only if multi-author
-  single-line vertex merge becomes a real requirement. Needs antst's sign-off.
+- **OPEN-1 — array-property representation. ✅ RESOLVED (antst, 2026-06-18): hybrid.**
+  Grounding: current Excalidraw `reconcileElements` is whole-element LWW — it
+  loses one of any two concurrent same-element edits, so JSON-leaf is already a
+  strict improvement and never a regression. Decision:
+  - `boundElements` → **nested `Y.Map<id,type>`** (add/remove set) so concurrent
+    binding of different arrows/text to the **same** node merges (the one
+    realistic multi-author array case). See data-model §4.1.
+  - `points`, `pressures` → **JSON-leaf** (large, churny, near-always
+    single-author; whole-`points` LWW matches today). A nested `Y.Array<[x,y]>`
+    stays a deferred future option, only if multi-author single-line vertex merge
+    becomes a real requirement.
+  - `groupIds` → **JSON-leaf** (order-sensitive nesting hierarchy; a set would
+    lose order; concurrency rare).
 - **OPEN-2 — `appState` collaboration scope.** v1 plan: **nothing** in the doc;
   `appState` is fully local. Candidate shared subset: scene `name`,
   `viewBackgroundColor` (Excalidraw marks these "observable"). Question: do we
