@@ -15,6 +15,14 @@ import { Island } from "./Island";
 
 import { PenModeButton } from "./PenModeButton";
 
+import { EmojiPickerPanel } from "./emojis/emojiReactions";
+
+import { CountdownTimerPanel } from "./countdownTimer";
+
+import type { UseEmojiReactionsResult } from "./emojis/emojiReactions";
+
+import type { UseCountdownTimerResult } from "./countdownTimer";
+
 import type { ActionManager } from "../actions/manager";
 import type {
   AppClassProperties,
@@ -46,6 +54,9 @@ type MobileMenuProps = {
   renderWelcomeScreen: boolean;
   UIOptions: AppProps["UIOptions"];
   app: AppClassProperties;
+  isCollaborating: boolean;
+  reactions: UseEmojiReactionsResult;
+  countdownTimer: UseCountdownTimerResult;
 };
 
 export const MobileMenu = ({
@@ -61,6 +72,9 @@ export const MobileMenu = ({
   UIOptions,
   app,
   onPenModeToggle,
+  isCollaborating,
+  reactions,
+  countdownTimer,
 }: MobileMenuProps) => {
   const {
     WelcomeScreenCenterTunnel,
@@ -121,7 +135,32 @@ export const MobileMenu = ({
         app={app}
         onHandToolToggle={onHandToolToggle}
         setAppState={setAppState}
+        appState={appState}
+        actionManager={actionManager}
+        isCollaborating={isCollaborating}
+        reactions={reactions}
+        countdownTimer={countdownTimer}
       />
+    );
+  };
+
+  const renderPopups = () => {
+    return (
+      <>
+        {reactions.showEmojiPicker && !reactions.reactionModeActive && (
+          <div
+            ref={reactions.emojiPickerRef}
+            className="emoji-submenu__panel emoji-submenu__panel--mobile"
+            data-testid="emoji-picker-wrapper"
+          >
+            <EmojiPickerPanel
+              onSelect={(emoji) => {
+                reactions.handleSelectReactionEmoji(emoji);
+              }}
+            />
+          </div>
+        )}
+      </>
     );
   };
 
@@ -174,7 +213,23 @@ export const MobileMenu = ({
 
       <FixedSideContainer side="top" className="App-top-bar">
         {renderAppTopBar()}
+        {countdownTimer.isActive && (
+          <Island
+            className="mobile-countdown-timer-island"
+            style={{
+              marginTop: 8,
+              alignSelf: "center",
+              height: "fit-content",
+            }}
+          >
+            <CountdownTimerPanel
+              timers={countdownTimer.timers}
+              onCancel={countdownTimer.cancelTimer}
+            />
+          </Island>
+        )}
       </FixedSideContainer>
+      {renderPopups()}
     </>
   );
 };

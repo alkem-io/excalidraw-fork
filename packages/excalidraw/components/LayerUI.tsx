@@ -658,6 +658,9 @@ const LayerUI = ({
           renderSidebars={renderSidebars}
           renderWelcomeScreen={renderWelcomeScreen}
           UIOptions={UIOptions}
+          isCollaborating={isCollaborating}
+          reactions={reactions}
+          countdownTimer={countdownTimer}
         />
       )}
       {editorInterface.formFactor !== "phone" && (
