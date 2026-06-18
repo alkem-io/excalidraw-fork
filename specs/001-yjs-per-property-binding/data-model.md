@@ -14,7 +14,7 @@ All names below are **top-level Yjs root types** obtained with `ydoc.getMap(name
 Y.Doc
 ├── elements : Y.Map<elementId: string, Y.Map<prop: string, value>>   // the scene
 ├── files    : Y.Map<fileId: string, BinaryFileData (JSON-leaf)>      // image binaries
-└── (reserved) appState : Y.Map<key, value>    // NOT created in v1 — see OPEN-2
+└── appState : Y.Map<key, value>    // v1 allow-list: viewBackgroundColor, name (OPEN-2 resolved)
 ```
 
 - **`elements`** — id-keyed scene map. Key = Excalidraw `element.id`. Value = a

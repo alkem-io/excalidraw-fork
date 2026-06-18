@@ -60,9 +60,10 @@ to a server is WS-D/WS-C.
   JSON-encoded leaf values, accepting per-key LWW for them.
 - **D2 — `points` as a JSON-encoded leaf in v1, with a nested-`Y.Array` option
   flagged as an OPEN question.** See spec OPEN-1.
-- **D3 — `appState` is not collaborative by default.** Only elements + files are
-  in the scene doc. A minimal shared subset (scene name, view background color)
-  is an OPEN question (OPEN-2), not synced in v1.
+- **D3 — `appState` is local except an explicit allow-list.** Elements + files +
+  a small `appState` `Y.Map` are in the doc. The allow-list syncs **`viewBackgroundColor`
+  and scene `name`** (persisted/shared today — OPEN-2 resolved); all other
+  `appState` (selection, zoom, scroll, active tool) stays per-client.
 - **D4 — `version`/`versionNonce` are retained on elements (Excalidraw interop)
   but are NOT the merge authority.** Yjs owns causality; `version` is used only
   as a cheap change signal in the diff. On apply, bump `version`/`versionNonce`
@@ -344,26 +345,28 @@ deep-equal up to the documented normalization rules (see data-model §6).
     becomes a real requirement.
   - `groupIds` → **JSON-leaf** (order-sensitive nesting hierarchy; a set would
     lose order; concurrency rare).
-- **OPEN-2 — `appState` collaboration scope.** v1 plan: **nothing** in the doc;
-  `appState` is fully local. Candidate shared subset: scene `name`,
-  `viewBackgroundColor` (Excalidraw marks these "observable"). Question: do we
-  want background/name to sync (a third top-level `Y.Map appState`), or keep them
-  local and let the host set them? **Recommendation: keep local in v1**, leave the
-  `appState` map slot reserved in the schema for a later, explicit allow-list.
-- **OPEN-3 — `version`/`versionNonce` bump policy on remote apply.** When applying
-  a remote per-property change, do we recompute `version`/`versionNonce` locally
-  (so Excalidraw's internal version monotonicity holds), or carry the remote
-  element's values? Carrying remote risks non-monotonic local `version`; bumping
-  locally diverges the nonce across clients (harmless since nonce no longer drives
-  merge). **Recommendation: bump locally on apply** (treat version/nonce as
-  purely local-render metadata). Confirm this is acceptable given any code still
-  reading `getSceneVersion()`.
-- **OPEN-4 — tombstone GC.** Tombstones (and `points` churn for freedraw) grow the
-  doc unboundedly over a board's life. The epic defers history/GC policy to
-  `y-crdt` (FR-025, configurable GC). Question for the binding: do we ever *hard*
-  remove very old tombstones at the binding level (risking resurrection on a slow
-  peer), or always defer to the server/core GC? **Recommendation: never hard-delete
-  at the binding; defer to core GC** — but flag the doc-growth risk for WS-A/WS-C.
+- **OPEN-2 — `appState` collaboration scope. ✅ RESOLVED (antst, 2026-06-18): sync a minimal allow-list.**
+  Code check: `viewBackgroundColor` is a **persisted, shared** scene property
+  today (seeded in `EmptyWhiteboard.ts`, captured via `getAppState()` and
+  serialized into saved whiteboard content). Keeping appState fully local would
+  reset the background to default on reload — a regression. Decision: a **third
+  top-level `appState: Y.Map`** holding an explicit allow-list — **`viewBackgroundColor`
+  and scene `name`** in v1 — so they persist and live-sync. Everything else in
+  `appState` stays local (per-client selection/zoom/scroll/tool). The allow-list
+  is the extension point for future shared keys.
+- **OPEN-3 — `version`/`versionNonce` bump policy on remote apply. ✅ RESOLVED (antst, 2026-06-18): bump locally.**
+  Code check: client-web hashes `element.version` via `hashElementsVersion()` for
+  change detection (`Collab.ts` broadcast dedup; `mergeWhiteboard`/preview/save).
+  On applying a remote per-property change, **recompute `version`/`versionNonce`
+  locally** — keeps version monotonic and keeps hash-based change detection
+  meaningful for any surviving consumer. Nonce divergence across clients is
+  harmless (it no longer drives merge). Carrying remote verbatim risks
+  non-monotonic version and missed change-detection.
+- **OPEN-4 — tombstone GC. ✅ RESOLVED (antst, 2026-06-18): defer to core GC.**
+  The binding **never hard-deletes** tombstones (avoids resurrection on a
+  slow/offline peer). Unbounded doc growth (tombstones + freedraw `points` churn)
+  is owned by the configurable `y-crdt`/`collaboration-service` GC policy
+  (FR-025, ADR-0001) — flagged as a doc-growth risk for WS-A/WS-C to size.
 
 ## Assumptions & Dependencies
 

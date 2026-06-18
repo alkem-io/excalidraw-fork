@@ -18,8 +18,8 @@ tests with **two in-process `Y.Doc`s** (no Go server needed).
 ## Phase 1: Setup & schema
 
 - [ ] T001 Scaffold `packages/yjs-binding/` package: `package.json` (deps `yjs`, `y-protocols`, `@excalidraw/element`, `@excalidraw/fractional-indexing`), `tsconfig.json`, build wiring matching the monorepo's other packages. (`packages/yjs-binding/package.json`)
-- [ ] T002 Define root-name constants and the origin sentinel: `ELEMENTS`, `FILES`, reserved `APPSTATE`, and a unique `BINDING_ORIGIN` object. (`packages/yjs-binding/src/origin.ts`, `src/schema.ts`)
-- [ ] T003 [US1] Implement `elementToYMap(element)` / `yMapToElement(ymap)` encode/decode honoring the representation tiering (scalars as plain values; JSON-leaf for `points`, `pressures`, `groupIds`, `boundElements`, `roundness`, `startBinding`/`endBinding`/`fixedSegments`, `scale`, `crop`, `customData`) per data-model §2/§4. Derive keys from the live element object, not a hand-list. (`packages/yjs-binding/src/schema.ts`)
+- [ ] T002 Define root-name constants and the origin sentinel: `ELEMENTS`, `FILES`, `APPSTATE` (synced allow-list `viewBackgroundColor`, `name` — OPEN-2 resolved), and a unique `BINDING_ORIGIN` object. (`packages/yjs-binding/src/origin.ts`, `src/schema.ts`)
+- [ ] T003 [US1] Implement `elementToYMap(element)` / `yMapToElement(ymap)` encode/decode honoring the representation tiering (scalars as plain values; JSON-leaf for `points`, `pressures`, `groupIds`, `roundness`, `startBinding`/`endBinding`/`fixedSegments`, `scale`, `crop`, `customData`; **`boundElements` → nested `Y.Map<id,"arrow"|"text">` add/remove set per §4.1**) per data-model §2/§4. Derive keys from the live element object, not a hand-list. (`packages/yjs-binding/src/schema.ts`)
 - [ ] T004 Add unit tests for `schema.ts`: every base + subtype field round-trips; JSON-leaf deep-equal; scalars `===`. (`packages/yjs-binding/tests/schema.test.ts`)
 - [ ] T005 [P] [US3] Implement order helpers wrapping `@excalidraw/fractional-indexing`: `orderByIndex`, `keyBetween(prev,next)`, `repairIndices` (= `syncInvalidIndices`). No bespoke ordering. (`packages/yjs-binding/src/order.ts`) — data-model §3
 
@@ -30,7 +30,7 @@ tests with **two in-process `Y.Doc`s** (no Go server needed).
 ## Phase 2: onChange → Y write path (US1/US2)
 
 - [ ] T006 [US2] Implement the cheap change gate `areElementsSame(prev, next)` comparing `(id, version)` pairs (fast path to skip no-op `onChange`s). (`packages/yjs-binding/src/diff.ts`) — data-model §8 Diff
-- [ ] T007 [US1] Implement per-element **per-property** delta computation: for an existing element write only changed keys (deep-compare JSON-leaf, `===` scalars); for a new element write all keys + `keyBetween` `index`; for a removed element set `isDeleted=true` (tombstone, never `Y.Map.delete`). (`packages/yjs-binding/src/diff.ts`) — FR-B-001/002/006
+- [ ] T007 [US1] Implement per-element **per-property** delta computation: for an existing element write only changed keys (deep-compare JSON-leaf, `===` scalars; **`boundElements` diffs into its nested `Y.Map` via `set(id,type)`/`delete(id)`, §4.1**); for a new element write all keys + `keyBetween` `index`; for a removed element set `isDeleted=true` (tombstone, never `Y.Map.delete`). Also diff the `APPSTATE` allow-list (`viewBackgroundColor`, `name`) on local change. (`packages/yjs-binding/src/diff.ts`) — FR-B-001/002/006
 - [ ] T008 [US1] Apply all element writes in **one** `ydoc.transact(fn, BINDING_ORIGIN)`; update `lastKnownElements`. (`packages/yjs-binding/src/diff.ts`) — FR-B-002
 - [ ] T009 [P] [US1] Implement files diff in a separate map: append new `BinaryFileData`, remove dropped ids, origin-tagged. (`packages/yjs-binding/src/files.ts`) — FR-B-007
 - [ ] T010 [US2] Add tests: a single-property change emits exactly one transaction writing exactly one key; a no-op `onChange` emits no transaction. (`packages/yjs-binding/tests/echo.test.ts`)
@@ -46,7 +46,7 @@ tests with **two in-process `Y.Doc`s** (no Go server needed).
 - [ ] T013 [US3] Order applied elements by `index` (`orderByIndex`) and run `repairIndices` for concurrent equal-index collisions (write repairs back under `BINDING_ORIGIN`). (`packages/yjs-binding/src/apply.ts`) — data-model §3, US3-AC3
 - [ ] T014 [US3] Filter tombstones for render (`getNonDeletedElements`) while retaining them in the doc; honor merged `isDeleted`. (`packages/yjs-binding/src/apply.ts`) — FR-B-006, US1-AC3
 - [ ] T015 [US2] Implement the "actively editing" guard: skip replacing an element the local user is mid-editing (text edit / resize / new element), mirroring `shouldDiscardRemoteElement`'s editing checks. (`packages/yjs-binding/src/apply.ts`) — FR-B-013
-- [ ] T016 [US2] Call `api.updateScene({ elements, captureUpdate: CaptureUpdateAction.NEVER })`; preserve local `appState` selection/zoom/scroll. (`packages/yjs-binding/src/apply.ts`) — FR-B-003
+- [ ] T016 [US2] Call `api.updateScene({ elements, captureUpdate: CaptureUpdateAction.NEVER })`; apply the synced `APPSTATE` allow-list (`viewBackgroundColor`, `name`) from the doc; preserve local-only `appState` (selection/zoom/scroll/tool). (`packages/yjs-binding/src/apply.ts`) — FR-B-003
 
 **Checkpoint**: remote per-property changes render in correct order with tombstones, no echo, no lost local selection.
 
@@ -101,12 +101,12 @@ tests with **two in-process `Y.Doc`s** (no Go server needed).
 - T020 (awareness presence) and T021 (ephemeral events) parallel to the write/apply work.
 - T027/T028/T029 — independent test cases, parallelizable.
 
-## Notes / OPEN questions to resolve before/within implementation
+## Notes — OPEN questions (all ✅ RESOLVED by antst, 2026-06-18)
 
-- **OPEN-1** (`points` JSON-leaf vs nested `Y.Array`) — T003/T007 ship JSON-leaf; revisit only if intra-line multi-author vertex merge is required. Needs antst sign-off.
-- **OPEN-2** (`appState` shared subset) — none synced in v1; `APPSTATE` slot reserved (T002).
-- **OPEN-3** (`version`/`versionNonce` bump on apply) — T016 bumps locally; confirm no consumer relies on cross-client nonce equality.
-- **OPEN-4** (tombstone / `points` GC) — deferred to server/core GC (FR-025); flagged for WS-A/WS-C, not solved at the binding.
+- **OPEN-1 — hybrid.** `boundElements` → nested `Y.Map<id,type>` add/remove set (§4.1); `points`/`pressures`/`groupIds` → JSON-leaf. Grounding: current Excalidraw is whole-element LWW, so JSON-leaf never regresses; the nested set beats it exactly where concurrency is real (binding to one node). (T002/T003/T007)
+- **OPEN-2 — sync allow-list.** `viewBackgroundColor` + scene `name` sync via the `APPSTATE` `Y.Map` (they're persisted/shared today; local-only would regress). Other appState stays per-client. (T002/T007/T016)
+- **OPEN-3 — bump locally.** T016 recomputes `version`/`versionNonce` on apply (keeps `hashElementsVersion()` change-detection meaningful; nonce divergence is harmless).
+- **OPEN-4 — defer to core GC.** Binding never hard-deletes tombstones; doc-growth owned by the y-crdt/collaboration-service GC policy (FR-025, ADR-0001).
 
 **Total: 30 tasks across 7 phases.** All implementable and testable in-repo with two
 in-process `Y.Doc`s — no Go server, no v2 codec, no running backend.
