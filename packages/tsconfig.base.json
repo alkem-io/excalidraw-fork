@@ -22,7 +22,9 @@
       "@excalidraw/utils": ["./utils/src/index.ts"],
       "@excalidraw/utils/*": ["./utils/src/*"],
       "@excalidraw/fractional-indexing": ["./fractional-indexing/src/index.ts"],
-      "@excalidraw/fractional-indexing/*": ["./fractional-indexing/src/*"]
+      "@excalidraw/fractional-indexing/*": ["./fractional-indexing/src/*"],
+      "@alkemio/excalidraw-yjs-binding": ["./yjs-binding/src/index.ts"],
+      "@alkemio/excalidraw-yjs-binding/*": ["./yjs-binding/src/*"]
     }
   }
 }

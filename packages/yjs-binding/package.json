@@ -1,0 +1,49 @@
+{
+  "name": "@alkemio/excalidraw-yjs-binding",
+  "version": "0.18.0",
+  "type": "module",
+  "types": "./dist/types/yjs-binding/src/index.d.ts",
+  "main": "./dist/prod/index.js",
+  "module": "./dist/prod/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/types/yjs-binding/src/index.d.ts",
+      "development": "./dist/dev/index.js",
+      "production": "./dist/prod/index.js",
+      "default": "./dist/prod/index.js"
+    },
+    "./*": {
+      "types": "./dist/types/yjs-binding/src/*.d.ts",
+      "development": "./dist/dev/index.js",
+      "production": "./dist/prod/index.js",
+      "default": "./dist/prod/index.js"
+    }
+  },
+  "files": [
+    "dist/*"
+  ],
+  "description": "Per-property Yjs CRDT binding for the Excalidraw whiteboard scene (transport-agnostic).",
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "keywords": [
+    "excalidraw",
+    "yjs",
+    "crdt",
+    "collaboration",
+    "whiteboard"
+  ],
+  "bugs": "https://github.com/alkem-io/excalidraw-fork/issues",
+  "repository": "https://github.com/alkem-io/excalidraw-fork",
+  "scripts": {
+    "gen:types": "rimraf types && tsc",
+    "build:esm": "rimraf dist && node ../../scripts/buildBase.js && yarn gen:types"
+  },
+  "dependencies": {
+    "@excalidraw/element": "0.18.0",
+    "@excalidraw/fractional-indexing": "3.3.0",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.27"
+  }
+}

@@ -59,6 +59,14 @@ export default defineConfig({
           "./packages/fractional-indexing/src/$1",
         ),
       },
+      {
+        find: /^@alkemio\/excalidraw-yjs-binding$/,
+        replacement: path.resolve(__dirname, "./packages/yjs-binding/src/index.ts"),
+      },
+      {
+        find: /^@alkemio\/excalidraw-yjs-binding\/(.*?)/,
+        replacement: path.resolve(__dirname, "./packages/yjs-binding/src/$1"),
+      },
     ],
   },
   //@ts-ignore
