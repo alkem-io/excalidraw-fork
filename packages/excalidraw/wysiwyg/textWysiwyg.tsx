@@ -9,6 +9,7 @@ import {
   getFontFamilyString,
   isTestEnv,
   MIME_TYPES,
+  EXPORT_DATA_TYPES,
   applyDarkModeFilter,
   isRTL,
 } from "@excalidraw/common";
@@ -535,47 +536,62 @@ export const textWysiwyg = ({
 
       let dataList: ParsedDataTranferList | null = null;
 
-      // when copy/pasting excalidraw elements, only paste the text content
+      // when copy/pasting excalidraw elements, only paste the text content.
       //
-      // Note that these custom MIME types only work within the same family
-      // of browsers, so won't work e.g. between chrome and firefox. We could
-      // parse the text/plain for existence of excalidraw instead, but this
-      // is an edge case
-      if (
+      // The custom excalidraw MIME types only survive within the same family of
+      // browsers (won't work e.g. between chrome and firefox). Alkemio: when they
+      // are stripped, serialized elements arrive as text/plain only — so we read
+      // text/plain synchronously here (same tick as preventDefault, as FF
+      // requires) and treat text/plain carrying the excalidraw clipboard
+      // signature as element content too. This restores the fork's content-based
+      // paste guard on top of upstream's MIME-gated one, so element JSON is never
+      // inserted as literal text into a text element.
+      const plainText = event.clipboardData?.getData(MIME_TYPES.text) ?? "";
+      const hasExcalidrawMime =
         mimeTypes.has(MIME_TYPES.excalidrawClipboard) ||
-        mimeTypes.has(MIME_TYPES.excalidraw)
-      ) {
+        mimeTypes.has(MIME_TYPES.excalidraw);
+      const plainTextLooksLikeElements =
+        !hasExcalidrawMime &&
+        plainText.includes(EXPORT_DATA_TYPES.excalidrawClipboard);
+
+      if (hasExcalidrawMime || plainTextLooksLikeElements) {
         // must be called in the same tick
         event.preventDefault();
 
         dataList = await parseDataTransferEvent(event);
 
+        // We have preventDefault()ed the browser's own paste, so this branch now
+        // owns text insertion for every path below.
+        let textToInsert: string | null = null;
         try {
           const parsed = await parseClipboard(dataList);
-
           if (parsed.elements) {
-            const text = getTextFromElements(parsed.elements);
-            if (text) {
-              const { selectionStart, selectionEnd, value } = editable;
-
-              editable.value =
-                value.slice(0, selectionStart) +
-                text +
-                value.slice(selectionEnd);
-
-              const newPos = selectionStart + text.length;
-              editable.selectionStart = editable.selectionEnd = newPos;
-
-              editable.dispatchEvent(new Event("input"));
-            }
+            // excalidraw elements: paste only their text content (none → nothing)
+            textToInsert = getTextFromElements(parsed.elements);
+          } else if (plainTextLooksLikeElements) {
+            // signature matched but the payload wasn't parseable excalidraw data;
+            // fall back to pasting the literal text the user copied.
+            textToInsert = normalizeText(plainText);
           }
-
-          // if excalidraw elements don't contain any text elements,
-          // don't paste anything
-          return;
         } catch {
           console.warn("failed to parse excalidraw clipboard data");
+          if (plainTextLooksLikeElements) {
+            textToInsert = normalizeText(plainText);
+          }
         }
+
+        if (textToInsert) {
+          const { selectionStart, selectionEnd, value } = editable;
+          editable.value =
+            value.slice(0, selectionStart) +
+            textToInsert +
+            value.slice(selectionEnd);
+          const newPos = selectionStart + textToInsert.length;
+          editable.selectionStart = editable.selectionEnd = newPos;
+          editable.dispatchEvent(new Event("input"));
+        }
+
+        return;
       }
 
       dataList = dataList || (await parseDataTransferEvent(event));
