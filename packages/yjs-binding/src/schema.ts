@@ -48,6 +48,24 @@ export const JSON_LEAF_KEYS: ReadonlySet<string> = new Set([
 
 export const BOUND_ELEMENTS_KEY = "boundElements" as const;
 
+/**
+ * Excalidraw reconciliation metadata that each peer derives **locally** and that
+ * is therefore NEVER synced through the doc (OPEN-3, echo-loop fix). If these
+ * round-tripped as ordinary LWW scalars, a remote apply would mint a fresh
+ * `versionNonce`/`updated`, write them back under `BINDING_ORIGIN`, broadcast,
+ * and every peer would re-mint them — an unbounded cross-replica ping-pong.
+ *
+ * They are excluded from every write path (`elementToYMap`, `writeChangedKeys`),
+ * ignored as change signals (`elementChanged`/`hasDiffWork`), and re-derived on
+ * apply (`bumpVersion`) from local doc state — deterministically, so re-applying
+ * the same doc state is idempotent (no `Math.random()`/`Date.now()`).
+ */
+export const RECONCILE_META_KEYS: ReadonlySet<string> = new Set([
+  "version",
+  "versionNonce",
+  "updated",
+]);
+
 export type BoundElementType = BoundElement["type"];
 
 /** A plain element record as it travels through the binding (mutable copy). */
@@ -160,6 +178,32 @@ export const yMapToBoundElements = (
 };
 
 /**
+ * Given a nested `boundElements` `Y.Map`, return the ids of the *extra* text
+ * bindings that violate the "at most one bound text" invariant — every
+ * `type:"text"` entry except the lowest id (the keeper). Empty when the
+ * invariant already holds. Deterministic on every replica (sorts by id), so the
+ * reconciliation it drives converges without flapping (Fix #6).
+ */
+export const extraBoundTextIds = (
+  map: Y.Map<BoundElementType> | undefined,
+): string[] => {
+  if (!map || map.size === 0) {
+    return [];
+  }
+  const textIds: string[] = [];
+  for (const [id, type] of map.entries()) {
+    if (type === "text") {
+      textIds.push(id);
+    }
+  }
+  if (textIds.length <= 1) {
+    return [];
+  }
+  textIds.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  return textIds.slice(1); // keep the lowest id, the rest are extra
+};
+
+/**
  * Encode a plain Excalidraw element into a fresh per-element `Y.Map` honoring the
  * representation tiering (T003). Keys are derived from the live object via
  * `Object.keys`, so new upstream scalar fields carry automatically.
@@ -171,6 +215,11 @@ export const yMapToBoundElements = (
 export const elementToYMap = (element: ElementRecord): Y.Map<unknown> => {
   const ymap = new Y.Map<unknown>();
   for (const key of Object.keys(element)) {
+    if (RECONCILE_META_KEYS.has(key)) {
+      // version/versionNonce/updated are per-peer reconciliation metadata, never
+      // synced — each replica derives them locally on apply (OPEN-3).
+      continue;
+    }
     const value = element[key];
     if (value === undefined) {
       // Excalidraw omits some optional keys (e.g. customData) — don't store
@@ -222,8 +271,14 @@ export const yMapToElement = (ymap: Y.Map<unknown>): ElementRecord => {
  * - `boundElements`: diffed into the nested `Y.Map` via `set(id,type)` /
  *   `delete(id)` (§4.1) — add/remove set, never whole-array replace.
  *
- * Keys present on the `Y.Map` but absent from the element are NOT deleted here
- * (deletes are tombstones via `isDeleted`, not key removal — FR-B-006).
+ * A property going value → absent on the element (e.g. `link` cleared to
+ * `undefined`, or the key dropped entirely) IS removed from the `Y.Map` so a
+ * stale value cannot resurrect on the next round-trip (clear semantics). Element
+ * *removal* is still a tombstone via `isDeleted`, never wholesale key removal
+ * (FR-B-006) — this only clears individual properties of a surviving element.
+ *
+ * `version`/`versionNonce`/`updated` are never written here (per-peer
+ * reconciliation metadata — `RECONCILE_META_KEYS`, OPEN-3).
  *
  * MUST be called inside a `ydoc.transact(fn, BINDING_ORIGIN)`. Returns the number
  * of keys written (0 ⇒ nothing changed).
@@ -234,8 +289,19 @@ export const writeChangedKeys = (
 ): number => {
   let writes = 0;
   for (const key of Object.keys(element)) {
+    if (RECONCILE_META_KEYS.has(key)) {
+      continue;
+    }
     const next = element[key];
     if (next === undefined) {
+      // value → absent: clear it from the doc so it can't resurrect. boundElements
+      // is handled below via diffBoundElements (which empties the nested map).
+      if (key !== BOUND_ELEMENTS_KEY && ymap.has(key)) {
+        ymap.delete(key);
+        writes++;
+      } else if (key === BOUND_ELEMENTS_KEY) {
+        writes += diffBoundElements(ymap, null);
+      }
       continue;
     }
     if (key === BOUND_ELEMENTS_KEY) {
@@ -250,6 +316,20 @@ export const writeChangedKeys = (
       }
     } else if (prev !== next) {
       ymap.set(key, next);
+      writes++;
+    }
+  }
+  // Keys present on the doc but entirely absent from the element object (the key
+  // was dropped, not set to undefined) — clear them too (excluding meta + the
+  // element id, which is the map key, not a stored property).
+  for (const key of [...ymap.keys()]) {
+    if (
+      key !== "id" &&
+      key !== BOUND_ELEMENTS_KEY &&
+      !RECONCILE_META_KEYS.has(key) &&
+      !Object.prototype.hasOwnProperty.call(element, key)
+    ) {
+      ymap.delete(key);
       writes++;
     }
   }

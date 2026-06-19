@@ -23,13 +23,28 @@ const roundtrip = (el: ElementRecord): ElementRecord => {
   return yMapToElement(map.get(el.id as string)!);
 };
 
+/**
+ * Strip the per-peer reconciliation metadata that is intentionally NOT synced
+ * through the doc (version/versionNonce/updated — RECONCILE_META_KEYS, Fix #1).
+ * The round-trip is lossless for every *synced* key; these three are re-derived
+ * locally on apply, so they never survive a doc round-trip.
+ */
+const withoutMeta = (el: ElementRecord): ElementRecord => {
+  const { version: _v, versionNonce: _n, updated: _u, ...rest } = el;
+  return rest;
+};
+
 describe("schema: element encode/decode (T003/T004)", () => {
   it("round-trips a base rectangle losslessly (scalars ===)", () => {
     const el = makeElement({ id: "r1", x: 5, y: 7, strokeColor: "#ff0000" });
     const back = roundtrip(el);
-    expect(back).toEqual(el);
+    // version/versionNonce/updated are reconciliation metadata, not synced.
+    expect(back).toEqual(withoutMeta(el));
     expect(back.x).toBe(5);
     expect(back.strokeColor).toBe("#ff0000");
+    expect("version" in back).toBe(false);
+    expect("versionNonce" in back).toBe(false);
+    expect("updated" in back).toBe(false);
   });
 
   it("round-trips a text element subtype fields", () => {
@@ -46,7 +61,7 @@ describe("schema: element encode/decode (T003/T004)", () => {
       lineHeight: 1.25,
       autoResize: true,
     });
-    expect(roundtrip(el)).toEqual(el);
+    expect(roundtrip(el)).toEqual(withoutMeta(el));
   });
 
   it("round-trips JSON-leaf props by deep value equality (points/groupIds/customData)", () => {
@@ -89,7 +104,23 @@ describe("schema: element encode/decode (T003/T004)", () => {
         naturalHeight: 20,
       },
     });
-    expect(roundtrip(el)).toEqual(el);
+    expect(roundtrip(el)).toEqual(withoutMeta(el));
+  });
+
+  it("does NOT sync version/versionNonce/updated through the doc (Fix #1)", () => {
+    const doc = new Y.Doc();
+    const map = doc.getMap<Y.Map<unknown>>("elements");
+    const el = makeElement({
+      id: "meta1",
+      version: 42,
+      versionNonce: 99999,
+      updated: 1234567890,
+    });
+    doc.transact(() => map.set("meta1", elementToYMap(el)));
+    const ymap = map.get("meta1")!;
+    expect(ymap.has("version")).toBe(false);
+    expect(ymap.has("versionNonce")).toBe(false);
+    expect(ymap.has("updated")).toBe(false);
   });
 
   it("omits undefined keys (customData absent) for round-trip symmetry", () => {
@@ -191,6 +222,41 @@ describe("schema: writeChangedKeys per-property diff (T007)", () => {
       writes = writeChangedKeys(map.get("e2")!, { ...el });
     });
     expect(writes).toBe(0);
+  });
+
+  it("clears a property that went value → undefined (Fix #9)", () => {
+    const doc = new Y.Doc();
+    const map = doc.getMap<Y.Map<unknown>>("elements");
+    const el = makeElement({ id: "c1", link: "https://example.com" });
+    doc.transact(() => map.set("c1", elementToYMap(el)));
+    const ymap = map.get("c1")!;
+    expect(ymap.get("link")).toBe("https://example.com");
+
+    let writes = 0;
+    doc.transact(() => {
+      writes = writeChangedKeys(ymap, { ...el, link: undefined });
+    });
+    expect(writes).toBe(1);
+    // the stale value must be removed, not left to resurrect on round-trip
+    expect(ymap.has("link")).toBe(false);
+    expect("link" in yMapToElement(ymap)).toBe(false);
+  });
+
+  it("clears a property that was dropped from the element entirely (Fix #9)", () => {
+    const doc = new Y.Doc();
+    const map = doc.getMap<Y.Map<unknown>>("elements");
+    const el = makeElement({ id: "c2", link: "https://example.com" });
+    doc.transact(() => map.set("c2", elementToYMap(el)));
+    const ymap = map.get("c2")!;
+
+    const dropped = { ...el };
+    delete dropped.link;
+    let writes = 0;
+    doc.transact(() => {
+      writes = writeChangedKeys(ymap, dropped);
+    });
+    expect(writes).toBe(1);
+    expect(ymap.has("link")).toBe(false);
   });
 
   it("treats a JSON-leaf change (points) as one key write", () => {

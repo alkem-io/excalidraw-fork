@@ -9,8 +9,10 @@ import type {
 import {
   BINDING_ORIGIN,
   APPSTATE_ALLOW_LIST,
+  BOUND_ELEMENTS_KEY,
   yMapToElement,
   deepEqual,
+  extraBoundTextIds,
 } from "./schema";
 import { orderByIndex, repairIndices } from "./order";
 import { readFiles } from "./files";
@@ -35,8 +37,27 @@ export type ApplyRoots = {
 /** Hook telling apply which element id (if any) the local user is mid-editing. */
 export type EditingGuard = () => string | null;
 
-/** A simple random-ish nonce for the local version bump (OPEN-3). */
-const randomNonce = (): number => Math.floor(Math.random() * 2 ** 31);
+/**
+ * Deterministic `versionNonce` derived from `(id, version)` — a stable 31-bit
+ * FNV-1a hash. Replaces the old `Math.random()` nonce (OPEN-3): because
+ * `version`/`versionNonce`/`updated` are NOT synced (RECONCILE_META_KEYS),
+ * minting a random nonce on every remote apply made apply non-idempotent and
+ * (before the metadata was excluded) round-tripped into the doc, driving the
+ * cross-replica echo loop. A deterministic nonce makes a re-apply of identical
+ * doc state idempotent, while a real change (which bumps `version`) still yields
+ * a different nonce so Excalidraw's reconciliation/change-detection stays
+ * meaningful.
+ */
+const deriveNonce = (id: string, version: number): number => {
+  let hash = 0x811c9dc5;
+  const input = `${id}:${version}`;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  // fold to a non-negative 31-bit integer (matches Excalidraw's nonce range)
+  return (hash >>> 0) % 2 ** 31;
+};
 
 /**
  * Build the full element list from the doc's element maps, ordered by `index`
@@ -74,17 +95,21 @@ const bumpVersion = (
   next: ElementRecord,
   prev: ElementRecord | undefined,
 ): void => {
+  const id = next.id as string;
   if (!prev) {
-    // first time we see this element locally — keep whatever version it carries
-    if (typeof next.version !== "number") {
-      next.version = 1;
-    }
-    if (typeof next.versionNonce !== "number") {
-      next.versionNonce = randomNonce();
+    // First time we see this element locally. The doc never carries
+    // version/versionNonce/updated (RECONCILE_META_KEYS), so seed them
+    // deterministically from doc-derived state.
+    const version =
+      typeof next.version === "number" && next.version > 0 ? next.version : 1;
+    next.version = version;
+    next.versionNonce = deriveNonce(id, version);
+    if (typeof next.updated !== "number") {
+      next.updated = version;
     }
     return;
   }
-  // compare every key except the version metadata itself
+  // compare every key except the reconciliation metadata itself
   let changed = false;
   const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
   for (const key of keys) {
@@ -97,9 +122,12 @@ const bumpVersion = (
     }
   }
   if (changed) {
-    next.version = ((prev.version as number) ?? 0) + 1;
-    next.versionNonce = randomNonce();
-    next.updated = Date.now();
+    const version = ((prev.version as number) ?? 0) + 1;
+    next.version = version;
+    // Deterministic, NOT Math.random() — keeps a re-apply of identical doc state
+    // idempotent (no spurious onChange diff → no echo).
+    next.versionNonce = deriveNonce(id, version);
+    next.updated = version;
   } else {
     next.version = prev.version;
     next.versionNonce = prev.versionNonce;
@@ -164,6 +192,15 @@ export const applyToScene = (deps: ApplyDeps): ElementRecord[] => {
     }, BINDING_ORIGIN);
   }
 
+  // Reconcile the "at most one bound text" invariant INTO the doc (Fix #6).
+  // `yMapToBoundElements` already drops extra text bindings on read, but if the
+  // doc keeps them, the very next onChange diffs the (one-text) scene against the
+  // (two-text) doc and deletes the extra text — flapping with the peer that
+  // holds it. Deleting the extra ids here (deterministically: keep lowest id)
+  // makes doc and scene agree, and because every replica resolves identically it
+  // converges instead of flapping. Written under BINDING_ORIGIN (not echoed).
+  reconcileBoundTextInvariant(ydoc, elementsMap);
+
   // Editing guard (FR-B-013): keep the LIVE local copy of an element the user is
   // mid-editing (read from the editor's scene, which holds the in-progress edit)
   // instead of replacing it from the remote.
@@ -181,12 +218,19 @@ export const applyToScene = (deps: ApplyDeps): ElementRecord[] => {
     }
   }
 
-  // Files: add any new binaries the editor doesn't have yet.
+  // Files: add any binary the editor lacks OR whose bytes changed in the doc
+  // (e.g. a remote image replacement reuses the same fileId with a new dataURL).
+  // The old `!existingFiles[id]` filter only ADDED new ids, silently dropping
+  // updates to an existing id (Fix #2).
   const docFiles = readFiles(filesMap);
-  const existingFiles = api.getFiles();
+  const existingFiles = api.getFiles() as Record<
+    string,
+    BinaryFileData | undefined
+  >;
   const newFiles: BinaryFileData[] = [];
   for (const id of Object.keys(docFiles)) {
-    if (!existingFiles[id]) {
+    const existing = existingFiles[id];
+    if (!existing || !deepEqual(existing, docFiles[id])) {
       newFiles.push(docFiles[id]);
     }
   }
@@ -207,6 +251,48 @@ export const applyToScene = (deps: ApplyDeps): ElementRecord[] => {
 
   return applied;
 };
+
+/**
+ * Delete extra `type:"text"` bound-element entries (every text except the lowest
+ * id) from every element's nested `boundElements` `Y.Map`, so the doc satisfies
+ * the "at most one bound text" invariant that `yMapToBoundElements` enforces on
+ * read (Fix #6). Idempotent and deterministic across replicas → converges. Only
+ * opens a transaction if there is something to delete (no empty BINDING_ORIGIN
+ * transaction on the common case).
+ */
+const reconcileBoundTextInvariant = (
+  ydoc: Y.Doc,
+  elementsMap: Y.Map<Y.Map<unknown>>,
+): void => {
+  const toDrop: Array<{ nested: Y.Map<unknown>; ids: string[] }> = [];
+  for (const [, ymap] of elementsMap.entries()) {
+    const nested = ymap.get(BOUND_ELEMENTS_KEY);
+    if (!isYMap(nested)) {
+      continue;
+    }
+    const extra = extraBoundTextIds(nested as Y.Map<"arrow" | "text">);
+    if (extra.length > 0) {
+      toDrop.push({ nested, ids: extra });
+    }
+  }
+  if (toDrop.length === 0) {
+    return;
+  }
+  ydoc.transact(() => {
+    for (const { nested, ids } of toDrop) {
+      for (const id of ids) {
+        nested.delete(id);
+      }
+    }
+  }, BINDING_ORIGIN);
+};
+
+/** Narrow an unknown nested value to a `Y.Map` without importing the class. */
+const isYMap = (value: unknown): value is Y.Map<unknown> =>
+  value != null &&
+  typeof value === "object" &&
+  typeof (value as { delete?: unknown }).delete === "function" &&
+  typeof (value as { entries?: unknown }).entries === "function";
 
 /** Filter tombstones for callers that need the rendered (non-deleted) set. */
 export const nonDeleted = (

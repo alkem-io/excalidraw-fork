@@ -38,7 +38,9 @@
   "repository": "https://github.com/alkem-io/excalidraw-fork",
   "scripts": {
     "gen:types": "rimraf types && tsc",
-    "build:esm": "rimraf dist && node ../../scripts/buildBase.js && yarn gen:types"
+    "build:esm": "rimraf dist && node ../../scripts/buildBase.js && yarn gen:types",
+    "build": "yarn build:esm",
+    "test": "vitest run --root ../.. packages/yjs-binding"
   },
   "dependencies": {
     "@excalidraw/element": "0.18.0",

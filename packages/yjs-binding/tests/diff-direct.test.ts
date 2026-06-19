@@ -50,6 +50,29 @@ describe("writeDiff: new element index generation (findPrev/findNext)", () => {
     expect(bIndex < "a3").toBe(true);
   });
 
+  it("does NOT throw / abort the write when the input array is not index-sorted (Fix #8)", () => {
+    const roots = makeRoots();
+    // An unsorted onChange: descending indices around an indexless insert. Before
+    // the fix, generateKeyBetween(prev,next) with prev>=next threw and aborted
+    // the ENTIRE write, losing every element.
+    const next: ElementRecord[] = [
+      makeElement({ id: "hi", index: "a3" }),
+      makeElement({ id: "mid", index: null }), // insert between a3 and a1 (descending)
+      makeElement({ id: "lo", index: "a1" }),
+    ];
+    let writes = 0;
+    expect(() => {
+      writes = writeDiff(roots, [], next);
+    }).not.toThrow();
+    expect(writes).toBeGreaterThan(0);
+    // All three elements were written — none lost to an aborted transaction.
+    expect(roots.elementsMap.has("hi")).toBe(true);
+    expect(roots.elementsMap.has("mid")).toBe(true);
+    expect(roots.elementsMap.has("lo")).toBe(true);
+    // the indexless insert got SOME valid fractional key
+    expect(typeof roots.elementsMap.get("mid")!.get("index")).toBe("string");
+  });
+
   it("generates indices for a fully-indexless batch", () => {
     const roots = makeRoots();
     writeDiff(
@@ -69,7 +92,7 @@ describe("writeDiff: new element index generation (findPrev/findNext)", () => {
 });
 
 describe("writeDiff: removal → tombstone (FR-B-006)", () => {
-  it("sets isDeleted=true and bumps version, never deletes the map entry", () => {
+  it("sets isDeleted=true, never deletes the map entry, never syncs version (Fix #1/#5)", () => {
     const roots = makeRoots();
     const el = makeElement({ id: "d", index: "a1", version: 4 });
     writeDiff(roots, [], [el]);
@@ -78,7 +101,9 @@ describe("writeDiff: removal → tombstone (FR-B-006)", () => {
     expect(writes).toBeGreaterThan(0);
     const ymap = roots.elementsMap.get("d")!;
     expect(ymap.get("isDeleted")).toBe(true);
-    expect(ymap.get("version")).toBe(5);
+    // version is reconciliation metadata, never written to the doc — the old
+    // non-monotonic tombstone version write is gone (Fix #5 subsumed by Fix #1).
+    expect(ymap.has("version")).toBe(false);
     expect(roots.elementsMap.has("d")).toBe(true); // entry retained
 
     // removing an already-tombstoned element is a no-op

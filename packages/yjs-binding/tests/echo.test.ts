@@ -96,6 +96,87 @@ describe("echo: origin guard (T019 / SC-B-003)", () => {
     binding.destroy();
   });
 
+  it("a remote apply with a RE-ENTRANT updateScene produces zero BINDING_ORIGIN writes and no runaway recursion (Fix #1)", () => {
+    const doc = new Y.Doc();
+    const remote = new Y.Doc();
+    const api = new StubExcalidrawAPI();
+    // Real Excalidraw re-fires onChange synchronously from inside updateScene.
+    api.reentrantUpdateScene = true;
+    const binding = new WhiteboardBinding(doc, api.asBindingAPI());
+
+    // Count BINDING_ORIGIN transactions caused by the remote apply (the echo).
+    let bindingTx = 0;
+    doc.on("afterTransaction", (tx: Y.Transaction) => {
+      if (tx.origin === BINDING_ORIGIN) {
+        bindingTx++;
+      }
+    });
+    // Guard against unbounded re-entrant updateScene recursion (the stack-overflow
+    // symptom): cap updateScene calls and fail loudly if the loop runs away.
+    const updateSceneBefore = api.updateSceneCalls.length;
+
+    // A single remote element arrives via a second doc (origin !== BINDING_ORIGIN).
+    const remoteMap = remote.getMap<Y.Map<unknown>>("elements");
+    const ymap = new Y.Map<unknown>();
+    remote.transact(() => {
+      remoteMap.set("r1", ymap);
+      for (const [k, v] of Object.entries(
+        makeElement({ id: "r1", index: "a1", strokeColor: "#abcdef" }),
+      )) {
+        if (k !== "boundElements") {
+          ymap.set(k, v as unknown);
+        }
+      }
+    });
+    Y.applyUpdate(doc, Y.encodeStateAsUpdate(remote));
+
+    // The remote element landed in the scene…
+    expect(api.elements.find((e) => e.id === "r1")).toBeDefined();
+    // …with NO write echoed back into the doc under our origin…
+    expect(bindingTx).toBe(0);
+    // …and the re-entrant onChange did not spiral (exactly one apply → one
+    // updateScene; the synchronous onChange it provoked was swallowed by the
+    // re-entrancy guard, so no second apply ran).
+    expect(api.updateSceneCalls.length - updateSceneBefore).toBe(1);
+
+    binding.destroy();
+  });
+
+  it("a burst of remote applies (re-entrant updateScene) never echoes (Fix #1)", () => {
+    const doc = new Y.Doc();
+    const remote = new Y.Doc();
+    const api = new StubExcalidrawAPI();
+    api.reentrantUpdateScene = true;
+    const binding = new WhiteboardBinding(doc, api.asBindingAPI());
+
+    const remoteApi = new StubExcalidrawAPI();
+    const remoteBinding = new WhiteboardBinding(
+      remote,
+      remoteApi.asBindingAPI(),
+    );
+
+    let bindingTx = 0;
+    doc.on("afterTransaction", (tx: Y.Transaction) => {
+      if (tx.origin === BINDING_ORIGIN) {
+        bindingTx++;
+      }
+    });
+
+    // Remote peer makes 5 successive edits; each propagates to the local doc.
+    remoteApi.emitChange([makeElement({ id: "m", x: 0, index: "a1" })]);
+    for (let i = 1; i <= 5; i++) {
+      remoteApi.emitChange([{ ...remoteApi.elements[0], x: i * 10 }]);
+      Y.applyUpdate(doc, Y.encodeStateAsUpdate(remote));
+    }
+
+    // Every remote x is reflected locally and nothing was echoed back.
+    expect(api.elements.find((e) => e.id === "m")!.x).toBe(50);
+    expect(bindingTx).toBe(0);
+
+    binding.destroy();
+    remoteBinding.destroy();
+  });
+
   it("preserves local selection/zoom/scroll when a remote update is applied", () => {
     const doc = new Y.Doc();
     const remote = new Y.Doc();

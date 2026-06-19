@@ -63,6 +63,79 @@ describe("files: diff add/change/remove + readFiles (T009)", () => {
   });
 });
 
+describe("files: deletion guard during async load / tombstones (Fix #3)", () => {
+  const makeRoots = () => {
+    const doc = new Y.Doc();
+    return {
+      ydoc: doc,
+      elementsMap: doc.getMap<Y.Map<unknown>>("elements"),
+      filesMap: doc.getMap<BinaryFileData>("files"),
+      appStateMap: doc.getMap<unknown>("appState"),
+    };
+  };
+
+  it("keeps a binary referenced by a tombstoned image element", () => {
+    const roots = makeRoots();
+    const img = makeElement({
+      id: "img",
+      type: "image",
+      fileId: "f1",
+      index: "a1",
+    });
+    writeDiff(roots, [], [img], undefined, {
+      f1: file("f1", "BYTES"),
+    } as BinaryFiles);
+    expect(roots.filesMap.has("f1")).toBe(true);
+
+    // Soft-delete the image (removed from the next array → tombstone). A benign
+    // local onChange then fires WITHOUT the file in its files arg (the editor no
+    // longer lists deleted-image binaries). The file must survive — the
+    // tombstone still references it.
+    writeDiff(roots, [img], []); // tombstone
+    writeDiff(
+      roots,
+      [],
+      [{ ...img, isDeleted: true }],
+      undefined,
+      {} as BinaryFiles,
+    );
+    expect(roots.filesMap.has("f1")).toBe(true);
+  });
+
+  it("does not delete a binary while its image element exists but files is transiently partial", () => {
+    const roots = makeRoots();
+    const img = makeElement({
+      id: "img",
+      type: "image",
+      fileId: "f1",
+      index: "a1",
+    });
+    writeDiff(roots, [], [img], undefined, {
+      f1: file("f1", "BYTES"),
+    } as BinaryFiles);
+
+    // An onChange arrives mid async-load: the element is still present but the
+    // files arg is empty (binary not yet (re)loaded into the editor cache).
+    const writes = writeDiff(roots, [img], [img], undefined, {} as BinaryFiles);
+    expect(writes).toBe(0); // nothing to do — file is protected
+    expect(roots.filesMap.has("f1")).toBe(true);
+  });
+
+  it("still deletes a truly unreferenced binary", () => {
+    const roots = makeRoots();
+    const el = makeElement({ id: "shape", index: "a1" }); // no fileId
+    writeDiff(roots, [], [el], undefined, {
+      orphan: file("orphan", "X"),
+    } as BinaryFiles);
+    expect(roots.filesMap.has("orphan")).toBe(true);
+
+    // No element references "orphan" and it is absent from files → delete it.
+    const writes = writeDiff(roots, [el], [el], undefined, {} as BinaryFiles);
+    expect(writes).toBeGreaterThan(0);
+    expect(roots.filesMap.has("orphan")).toBe(false);
+  });
+});
+
 describe("apply: new files propagate to the editor via addFiles", () => {
   it("addFiles is called for binaries the editor lacks", () => {
     const doc = new Y.Doc();
@@ -81,6 +154,32 @@ describe("apply: new files propagate to the editor via addFiles", () => {
     Y.applyUpdate(doc, Y.encodeStateAsUpdate(remote));
 
     expect(api.files.f1).toBeDefined();
+
+    binding.destroy();
+  });
+
+  it("re-applies an existing fileId whose bytes changed in the doc (Fix #2)", () => {
+    const doc = new Y.Doc();
+    const remote = new Y.Doc();
+    const api = new StubExcalidrawAPI();
+    const binding = new WhiteboardBinding(doc, api.asBindingAPI());
+
+    api.emitChange([
+      makeElement({ id: "img", type: "image", fileId: "f1", index: "a1" }),
+    ]);
+    sync(doc, remote);
+
+    // First version of the binary arrives.
+    const fmap = remote.getMap<BinaryFileData>("files");
+    remote.transact(() => fmap.set("f1", file("f1", "ORIGINAL")));
+    Y.applyUpdate(doc, Y.encodeStateAsUpdate(remote));
+    expect((api.files.f1 as BinaryFileData).dataURL).toBe("ORIGINAL");
+
+    // The SAME fileId is replaced with new bytes (image replacement). Before the
+    // fix this was dropped because the id already existed locally.
+    remote.transact(() => fmap.set("f1", file("f1", "REPLACED")));
+    Y.applyUpdate(doc, Y.encodeStateAsUpdate(remote));
+    expect((api.files.f1 as BinaryFileData).dataURL).toBe("REPLACED");
 
     binding.destroy();
   });

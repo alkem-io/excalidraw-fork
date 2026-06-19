@@ -8,13 +8,14 @@ import type {
   BinaryFiles,
 } from "@excalidraw/excalidraw/types";
 
-import { diffFiles } from "./files";
+import { diffFiles, referencedFileIds } from "./files";
 import { keyBetween } from "./order";
 import {
   APPSTATE_ALLOW_LIST,
   BINDING_ORIGIN,
   BOUND_ELEMENTS_KEY,
   JSON_LEAF_KEYS,
+  RECONCILE_META_KEYS,
   deepEqual,
   elementToYMap,
   writeChangedKeys,
@@ -103,7 +104,7 @@ export const writeDiff = (
       // neighbour bounds from already-resolved indices around it in array order
       const prevIndex = findPrevIndex(next, i, generatedIndex);
       const nextIndex = findNextIndex(next, i, generatedIndex);
-      generatedIndex.set(el.id as string, keyBetween(prevIndex, nextIndex));
+      generatedIndex.set(el.id as string, safeKeyBetween(prevIndex, nextIndex));
     }
   }
 
@@ -125,31 +126,40 @@ export const writeDiff = (
       } else {
         const seeded: ElementRecord = { ...element };
         if (seeded.index == null) {
-          seeded.index = generatedIndex.get(id) ?? keyBetween(null, null);
+          seeded.index = generatedIndex.get(id) ?? safeKeyBetween(null, null);
         }
         elementsMap.set(id, elementToYMap(seeded));
         writes++;
       }
     }
 
-    // removals → tombstone (never Y.Map.delete)
-    for (const [id, prevEl] of prevById) {
+    // removals → tombstone (never Y.Map.delete). Only `isDeleted` is synced;
+    // `version`/`versionNonce`/`updated` are per-peer reconciliation metadata
+    // (RECONCILE_META_KEYS) and are derived locally on apply, so the old
+    // non-monotonic `version` write (which read the LOCAL prev.version and could
+    // dip below a concurrent remote bump) is gone — Fix #5 is subsumed by Fix #1.
+    for (const [id] of prevById) {
       if (!nextById.has(id)) {
         const ymap = elementsMap.get(id);
         if (ymap && ymap.get("isDeleted") !== true) {
           ymap.set("isDeleted", true);
-          ymap.set(
-            "version",
-            (((prevEl.version as number) ?? 0) + 1) as number,
-          );
           writes++;
         }
       }
     }
 
-    // files
+    // files — protect any binary still referenced by an element (live OR
+    // tombstoned) in the doc, or referenced by the incoming scene, from deletion
+    // when `files` is transiently partial during async image loading (Fix #3).
     if (files) {
-      writes += diffFiles(filesMap, files);
+      const protectedIds = referencedFileIds(elementsMap);
+      for (const el of next) {
+        const fileId = el.fileId;
+        if (typeof fileId === "string") {
+          protectedIds.add(fileId);
+        }
+      }
+      writes += diffFiles(filesMap, files, protectedIds);
     }
 
     // appState allow-list (OPEN-2): viewBackgroundColor + name
@@ -159,6 +169,31 @@ export const writeDiff = (
   }, BINDING_ORIGIN);
 
   return writes;
+};
+
+/**
+ * `keyBetween` that never throws on non-strictly-increasing bounds (Fix #8).
+ *
+ * `generateKeyBetween(prev, next)` throws when `prev >= next`. The neighbour
+ * bounds here come from the INPUT array order, which Excalidraw does NOT
+ * guarantee to be index-sorted — a reorder or mid-edit onChange can present
+ * descending indices around an indexless insert. A throw would abort the ENTIRE
+ * onChange write (every mutation in the transaction lost). When the bounds are
+ * invalid we drop the upper bound (seed just above `prev`, or anywhere if both
+ * are null); the result may not be strictly increasing, but `repairIndices`
+ * deterministically fixes ordering on the next apply — far better than losing
+ * the write.
+ */
+const safeKeyBetween = (prev: string | null, next: string | null): string => {
+  try {
+    return keyBetween(prev, next);
+  } catch {
+    try {
+      return keyBetween(prev, null);
+    } catch {
+      return keyBetween(null, null);
+    }
+  }
 };
 
 const findPrevIndex = (
@@ -254,8 +289,17 @@ const hasDiffWork = (
   // files
   if (files) {
     const nextIds = new Set(Object.keys(files));
+    // mirror diffFiles' protection (Fix #3): a doc file absent from `files` is
+    // only a real removal if no element (live or tombstoned) still references it.
+    const protectedIds = referencedFileIds(elementsMap);
+    for (const el of next) {
+      const fileId = el.fileId;
+      if (typeof fileId === "string") {
+        protectedIds.add(fileId);
+      }
+    }
     for (const id of filesMap.keys()) {
-      if (!nextIds.has(id)) {
+      if (!nextIds.has(id) && !protectedIds.has(id)) {
         return true;
       }
     }
@@ -285,8 +329,20 @@ const elementChanged = (
   element: ElementRecord,
 ): boolean => {
   for (const key of Object.keys(element)) {
+    if (RECONCILE_META_KEYS.has(key)) {
+      // version/versionNonce/updated are not synced — never a change signal.
+      continue;
+    }
     const next = element[key];
     if (next === undefined) {
+      // value → absent: a write is needed iff the doc still holds it.
+      if (key === BOUND_ELEMENTS_KEY) {
+        if (boundElementsChanged(ymap, null)) {
+          return true;
+        }
+      } else if (ymap.has(key)) {
+        return true;
+      }
       continue;
     }
     if (key === BOUND_ELEMENTS_KEY) {
@@ -301,6 +357,18 @@ const elementChanged = (
         return true;
       }
     } else if (prev !== next) {
+      return true;
+    }
+  }
+  // a doc key dropped entirely from the element (and not meta/id/boundElements)
+  // needs clearing → a change.
+  for (const key of ymap.keys()) {
+    if (
+      key !== "id" &&
+      key !== BOUND_ELEMENTS_KEY &&
+      !RECONCILE_META_KEYS.has(key) &&
+      !Object.prototype.hasOwnProperty.call(element, key)
+    ) {
       return true;
     }
   }

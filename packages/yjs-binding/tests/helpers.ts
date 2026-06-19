@@ -14,6 +14,13 @@ import type { ElementRecord } from "../src/schema";
 export class StubExcalidrawAPI {
   elements: ElementRecord[] = [];
   files: Record<string, unknown> = {};
+  /**
+   * When true, `updateScene` re-fires `onChange` synchronously — exactly like
+   * real Excalidraw (App.componentDidUpdate → onChangeEmitter). Off by default
+   * so the legacy tests (whose stub `updateScene` is a silent no-op) keep
+   * working; the echo test flips it on to exercise the re-entrancy guard.
+   */
+  reentrantUpdateScene = false;
   appState: Record<string, unknown> = {
     viewBackgroundColor: "#ffffff",
     name: "Untitled",
@@ -62,6 +69,16 @@ export class StubExcalidrawAPI {
     }
     if (sceneData.collaborators) {
       this.collaborators = sceneData.collaborators;
+    }
+    // Real Excalidraw emits onChange synchronously after the scene updates
+    // (componentDidUpdate → onChangeEmitter). When enabled, replay that here so
+    // the binding's re-entrancy guard is exercised. We re-fire with the SCENE's
+    // current elements verbatim (no version re-bump — the editor does not invent
+    // a new version just because updateScene ran).
+    if (this.reentrantUpdateScene && sceneData.elements) {
+      for (const handler of this.changeHandlers) {
+        handler(this.elements, this.appState, this.files ?? {});
+      }
     }
   };
 

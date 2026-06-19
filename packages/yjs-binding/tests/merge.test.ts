@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { BINDING_ORIGIN } from "../src/origin";
+import { extraBoundTextIds } from "../src/schema";
+
 import {
   StubExcalidrawAPI,
   WhiteboardBinding,
@@ -163,6 +166,66 @@ describe("merge: delete-vs-edit (T028 / US1-AC3)", () => {
 
     bindingA.destroy();
     bindingB.destroy();
+  });
+});
+
+describe("merge: boundElements 'at most one text' reconciled into the doc (Fix #6)", () => {
+  it("drops the extra text binding from the doc so doc and scene agree (no flap)", () => {
+    const doc = new Y.Doc();
+    const remote = new Y.Doc();
+    const api = new StubExcalidrawAPI();
+    const binding = new WhiteboardBinding(doc, api.asBindingAPI());
+
+    // Seed a node with one bound text via the binding.
+    api.emitChange([
+      makeElement({
+        id: "node",
+        index: "a1",
+        boundElements: [{ id: "text-b", type: "text" }],
+      }),
+    ]);
+    sync(doc, remote);
+
+    // Concurrency on a remote replica adds a SECOND text binding directly into
+    // the nested map (the invariant violation the binding must reconcile).
+    const remoteMap = remote.getMap<Y.Map<unknown>>("elements");
+    remote.transact(() => {
+      const nested = remoteMap.get("node")!.get("boundElements") as Y.Map<
+        "arrow" | "text"
+      >;
+      nested.set("text-a", "text"); // lower id than text-b
+    });
+    // Two text bindings now exist on the remote nested map.
+    Y.applyUpdate(doc, Y.encodeStateAsUpdate(remote)); // → applyToScene on local
+
+    // The binding reconciled the invariant INTO the local doc: only the lowest id
+    // (text-a) survives; the extra (text-b) was deleted under BINDING_ORIGIN.
+    const localNested = doc
+      .getMap<Y.Map<unknown>>("elements")
+      .get("node")!
+      .get("boundElements") as Y.Map<"arrow" | "text">;
+    expect(extraBoundTextIds(localNested)).toEqual([]);
+    const texts = [...localNested.entries()].filter(([, t]) => t === "text");
+    expect(texts.map(([id]) => id)).toEqual(["text-a"]);
+
+    // The materialized scene element agrees with the doc — exactly one bound text.
+    const sceneNode = api.elements.find((e) => e.id === "node")!;
+    const sceneTexts = (
+      sceneNode.boundElements as Array<{ id: string; type: string }>
+    ).filter((b) => b.type === "text");
+    expect(sceneTexts.map((b) => b.id)).toEqual(["text-a"]);
+
+    // And no flap: re-emitting the reconciled scene produces zero further writes.
+    let bindingTx = 0;
+    doc.on("afterTransaction", (tx: Y.Transaction) => {
+      if (tx.origin === BINDING_ORIGIN) {
+        bindingTx++;
+      }
+    });
+    api.emitChange([{ ...sceneNode }]);
+    expect(bindingTx).toBe(0);
+
+    binding.destroy();
   });
 });
 

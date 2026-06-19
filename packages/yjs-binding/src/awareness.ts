@@ -79,8 +79,20 @@ export class AwarenessRouter {
     this.api = deps.api;
     this.ephemeral = deps.ephemeral;
 
-    // Remote awareness → collaborator cursors (touches no elements).
-    const onChange = () => this.applyRemoteAwareness();
+    // Remote awareness → collaborator cursors (touches no elements). The
+    // y-protocols 'change' event passes an origin; LOCAL-origin changes (our own
+    // cursor/selection moves via setLocalStateField) must NOT trigger an
+    // applyRemoteAwareness → updateScene → onChange cycle — only remote peers'
+    // state does (Fix #7).
+    const onChange = (
+      _changes: { added: number[]; updated: number[]; removed: number[] },
+      origin: unknown,
+    ) => {
+      if (origin === "local") {
+        return;
+      }
+      this.applyRemoteAwareness();
+    };
     this.awareness.on("change", onChange);
     this.cleanups.push(() => this.awareness.off("change", onChange));
 
@@ -175,5 +187,14 @@ export class AwarenessRouter {
       cleanup();
     }
     this.cleanups.length = 0;
+    // Clear our local presence on teardown so peers drop this client's cursor
+    // immediately instead of waiting ~30s for the awareness timeout to expire
+    // (Fix #7 — no ghost cursor after unmount). This emits a 'removed' change to
+    // other clients; our own handler is already detached above.
+    try {
+      this.awareness.setLocalState(null);
+    } catch {
+      // awareness may already be destroyed (e.g. its doc was destroyed first)
+    }
   }
 }

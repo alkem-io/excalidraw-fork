@@ -183,4 +183,52 @@ describe("roundtrip: lossless JSON ↔ Y.Doc (T025 / SC-B-005)", () => {
     expect(out.elements.map((e) => e.id)).toEqual(["first", "second", "third"]);
     expect(out.elements.every((e) => typeof e.index === "string")).toBe(true);
   });
+
+  it("seeds a PARTIALLY-missing index in source order, not at the back (Fix #4)", () => {
+    // The reproduction: X, Y(no idx), Z. Y must keep its middle position.
+    const scene: SceneJSON = {
+      elements: [
+        makeElement({ id: "X", index: "a1" }),
+        makeElement({ id: "Y", index: null }),
+        makeElement({ id: "Z", index: "a3" }),
+      ],
+    };
+    const doc = new Y.Doc();
+    populateYDoc(scene, doc);
+    const out = exportSceneJSON(doc);
+    expect(out.elements.map((e) => e.id)).toEqual(["X", "Y", "Z"]);
+    expect(out.elements.every((e) => typeof e.index === "string")).toBe(true);
+    // strictly increasing indices
+    const idx = out.elements.map((e) => e.index as string);
+    expect([...idx].sort()).toEqual(idx);
+  });
+
+  it("seeds a leading no-index element at the front (Fix #4)", () => {
+    const scene: SceneJSON = {
+      elements: [
+        makeElement({ id: "lead", index: null }),
+        makeElement({ id: "A", index: "a1" }),
+        makeElement({ id: "B", index: "a2" }),
+      ],
+    };
+    const doc = new Y.Doc();
+    populateYDoc(scene, doc);
+    const out = exportSceneJSON(doc);
+    expect(out.elements.map((e) => e.id)).toEqual(["lead", "A", "B"]);
+  });
+
+  it("seeds a run of consecutive no-index elements in source order (Fix #4)", () => {
+    const scene: SceneJSON = {
+      elements: [
+        makeElement({ id: "A", index: "a1" }),
+        makeElement({ id: "M1", index: null }),
+        makeElement({ id: "M2", index: null }),
+        makeElement({ id: "Z", index: "a5" }),
+      ],
+    };
+    const doc = new Y.Doc();
+    populateYDoc(scene, doc);
+    const out = exportSceneJSON(doc);
+    expect(out.elements.map((e) => e.id)).toEqual(["A", "M1", "M2", "Z"]);
+  });
 });

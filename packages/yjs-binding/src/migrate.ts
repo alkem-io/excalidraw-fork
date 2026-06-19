@@ -98,21 +98,50 @@ export const exportSceneJSON = (ydoc: Y.Doc): Required<SceneJSON> => {
 };
 
 /**
- * Assign provisional sequential indices to elements that have none, preserving
- * the source array order, before the deterministic `repairIndices` pass. This
- * keeps a source scene with entirely missing indices in its given order.
+ * Assign provisional fractional indices to elements that have none, preserving
+ * the source array order, before the deterministic `repairIndices` pass.
+ *
+ * A no-index element is seeded BETWEEN its nearest already-indexed (or
+ * already-seeded) neighbours in array order, so it keeps the z-position the
+ * source array implies. The previous implementation only seeded when EVERY
+ * element lacked an index; a PARTIAL-missing set was left with `null` indices,
+ * and `orderByIndex` sinks null-index elements to the end — so a front element
+ * with no index (e.g. `X, Y(no idx), Z` → `X, Z, Y`) was silently reordered to
+ * the back (Fix #4).
  */
 const seedMissingIndices = (elements: ElementRecord[]): void => {
-  const missingCount = elements.filter((el) => el.index == null).length;
-  if (missingCount === 0) {
-    return;
+  const n = elements.length;
+  let i = 0;
+  while (i < n) {
+    if (readIndexOf(elements[i]) != null) {
+      i++;
+      continue;
+    }
+    // contiguous run of missing indices [i, j)
+    let j = i;
+    while (j < n && readIndexOf(elements[j]) == null) {
+      j++;
+    }
+    const lower = i > 0 ? readIndexOf(elements[i - 1]) : null;
+    const upper = j < n ? readIndexOf(elements[j]) : null;
+    const runLength = j - i;
+    let keys: string[];
+    try {
+      keys = keysBetween(lower, upper, runLength);
+    } catch {
+      // Source bounds were not strictly increasing (malformed input). Seed above
+      // the lower bound only; `repairIndices` afterwards makes the order strictly
+      // increasing again. Preserves array order within the run.
+      keys = keysBetween(lower, null, runLength);
+    }
+    for (let k = 0; k < runLength; k++) {
+      elements[i + k].index = keys[k];
+    }
+    i = j;
   }
-  // If ALL are missing, distribute keys across the whole space in array order.
-  if (missingCount === elements.length) {
-    const keys = keysBetween(null, null, elements.length);
-    elements.forEach((el, i) => {
-      el.index = keys[i];
-    });
-  }
-  // Partial-missing is handled by repairIndices afterwards.
+};
+
+const readIndexOf = (el: ElementRecord): string | null => {
+  const idx = el.index;
+  return typeof idx === "string" ? idx : null;
 };

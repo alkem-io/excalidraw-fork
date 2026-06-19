@@ -65,6 +65,16 @@ export class WhiteboardBinding {
   private readonly api: BindingExcalidrawAPI;
   private readonly editingGuard?: EditingGuard;
   private lastKnownElements: ElementRecord[] = [];
+  /**
+   * Re-entrancy guard (FR-B-004). Real Excalidraw fires `onChange` synchronously
+   * from inside `updateScene` (App.componentDidUpdate → onChangeEmitter). Our
+   * own `applyToScene` → `updateScene` would therefore provoke an `onChange` that
+   * re-enters `onSceneChange` and writes the just-applied state straight back
+   * into the doc. We set this flag around `applyToScene` and short-circuit any
+   * `onChange` raised while it is set — independent of writeDiff being a perfect
+   * no-op.
+   */
+  private applying = false;
   private unsubscribeOnChange?: () => void;
   private readonly observeDeepHandler: (
     events: Y.YEvent<Y.AbstractType<unknown>>[],
@@ -113,12 +123,7 @@ export class WhiteboardBinding {
     }
 
     // Apply the current doc state to the scene, seeding lastKnownElements.
-    this.lastKnownElements = applyToScene({
-      roots: this.roots(),
-      api,
-      getPrevElements: () => this.lastKnownElements,
-      editingGuard: this.editingGuard,
-    });
+    this.lastKnownElements = this.applyGuarded();
 
     // observe → apply (echo-guarded)
     this.observeDeepHandler = (_events, transaction) =>
@@ -150,6 +155,24 @@ export class WhiteboardBinding {
     };
   }
 
+  /**
+   * Run `applyToScene` with the re-entrancy guard set, so any `onChange` the
+   * editor fires synchronously from inside `updateScene` is ignored (no echo).
+   */
+  private applyGuarded(): ElementRecord[] {
+    this.applying = true;
+    try {
+      return applyToScene({
+        roots: this.roots(),
+        api: this.api,
+        getPrevElements: () => this.lastKnownElements,
+        editingGuard: this.editingGuard,
+      });
+    } finally {
+      this.applying = false;
+    }
+  }
+
   /** onChange → per-property Yjs write path (FR-B-002). */
   private onSceneChange(
     elements: ElementRecord[],
@@ -157,6 +180,12 @@ export class WhiteboardBinding {
     files: Parameters<Parameters<BindingExcalidrawAPI["onChange"]>[0]>[2],
   ): void {
     if (this.destroyed) {
+      return;
+    }
+    // Re-entrancy guard: this onChange was provoked by our own applyToScene →
+    // updateScene (real Excalidraw re-fires onChange synchronously). Ignore it —
+    // applying remote state must NOT be echoed back into the doc (FR-B-004).
+    if (this.applying) {
       return;
     }
     // Fast path: if no element changed by (id, version), only appState/files can
@@ -183,12 +212,7 @@ export class WhiteboardBinding {
     if (transaction.origin === BINDING_ORIGIN) {
       return;
     }
-    this.lastKnownElements = applyToScene({
-      roots: this.roots(),
-      api: this.api,
-      getPrevElements: () => this.lastKnownElements,
-      editingGuard: this.editingGuard,
-    });
+    this.lastKnownElements = this.applyGuarded();
   }
 
   /** Detach every observer + subscription; no leaks on remount (FR-B-012). */
@@ -221,12 +245,13 @@ export {
   yMapToElement,
   boundElementsToYMap,
   yMapToBoundElements,
+  extraBoundTextIds,
   writeChangedKeys,
   diffBoundElements,
   deepEqual,
 } from "./schema";
 export { orderByIndex, keyBetween, keysBetween, repairIndices } from "./order";
-export { diffFiles, readFiles } from "./files";
+export { diffFiles, readFiles, referencedFileIds } from "./files";
 
 export type { ElementRecord, AppStateAllowKey } from "./schema";
 export type {

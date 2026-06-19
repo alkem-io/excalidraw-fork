@@ -1,4 +1,8 @@
-import { Awareness } from "y-protocols/awareness";
+import {
+  Awareness,
+  applyAwarenessUpdate,
+  encodeAwarenessUpdate,
+} from "y-protocols/awareness";
 import { describe, expect, it } from "vitest";
 
 import { AwarenessRouter } from "../src/awareness";
@@ -113,15 +117,63 @@ describe("awareness: ephemeral isolation (T022 / SC-B-004 / FR-B-008)", () => {
     });
 
     const elementsBefore = api.elements.length;
-    // Simulate a remote peer's awareness state landing locally.
-    localAwareness.setLocalStateField("pointer", { x: 1, y: 1 });
+    const callsBefore = api.updateSceneCalls.length;
 
+    // A genuinely REMOTE peer's awareness state lands locally (non-'local'
+    // origin) — encode a second awareness and apply it onto the local one.
+    const remoteAwareness = new Awareness(new Y.Doc());
+    remoteAwareness.setLocalStateField("pointer", { x: 1, y: 1 });
+    remoteAwareness.setLocalStateField("user", { username: "peer" });
+    applyAwarenessUpdate(
+      localAwareness,
+      encodeAwarenessUpdate(remoteAwareness, [remoteAwareness.clientID]),
+      "remote",
+    );
+
+    expect(api.updateSceneCalls.length).toBeGreaterThan(callsBefore);
     const lastUpdate = api.updateSceneCalls[api.updateSceneCalls.length - 1];
     expect(lastUpdate.collaborators).toBeDefined();
     expect(lastUpdate.elements).toBeUndefined(); // no element mutation
     expect(api.elements.length).toBe(elementsBefore);
 
     router.destroy();
+    remoteAwareness.destroy();
+  });
+
+  it("LOCAL-origin awareness changes do NOT trigger updateScene (Fix #7)", () => {
+    const api = new StubExcalidrawAPI();
+    const localAwareness = new Awareness(new Y.Doc());
+    const router = new AwarenessRouter({
+      awareness: localAwareness,
+      api: api.routerApi(),
+    });
+
+    const callsBefore = api.updateSceneCalls.length;
+    // Local cursor/selection moves — must not loop through applyRemoteAwareness.
+    router.onPointerUpdate({ pointer: { x: 5, y: 5 }, button: "up" });
+    router.onSelectionChange({ a: true });
+    router.onIdleChange("active");
+    localAwareness.setLocalStateField("pointer", { x: 9, y: 9 });
+
+    expect(api.updateSceneCalls.length).toBe(callsBefore);
+
+    router.destroy();
+  });
+
+  it("destroy() clears local awareness state so peers drop the cursor (Fix #7)", () => {
+    const api = new StubExcalidrawAPI();
+    const localAwareness = new Awareness(new Y.Doc());
+    const router = new AwarenessRouter({
+      awareness: localAwareness,
+      api: api.routerApi(),
+    });
+
+    router.onPointerUpdate({ pointer: { x: 1, y: 2 }, button: "up" });
+    expect(localAwareness.getLocalState()).not.toBeNull();
+
+    router.destroy();
+    // No ghost cursor: our local presence is cleared on teardown.
+    expect(localAwareness.getLocalState()).toBeNull();
   });
 });
 
