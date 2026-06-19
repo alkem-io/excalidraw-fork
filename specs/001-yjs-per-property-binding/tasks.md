@@ -1,15 +1,11 @@
 # Tasks: Per-Property Yjs Whiteboard Binding
 
-**Input**: design docs in `specs/001-yjs-per-property-binding/` (spec.md, plan.md, data-model.md, research.md)
-**Repo**: `alkem-io/excalidraw-fork` · **Branch**: `feat/003-unify-collab-yjs`
-**Parent**: workspace epic `003-unify-collab-yjs` WS-B (B2); gates epic FR-003 / FR-008.
-**Tests**: included — the epic mandates ≥95% coverage (SC-008) and convergence component
-tests with **two in-process `Y.Doc`s** (no Go server needed).
+**Input**: design docs in `specs/001-yjs-per-property-binding/` (spec.md, plan.md, data-model.md, research.md) **Repo**: `alkem-io/excalidraw-fork` · **Branch**: `feat/003-unify-collab-yjs` **Parent**: workspace epic `003-unify-collab-yjs` WS-B (B2); gates epic FR-003 / FR-008. **Tests**: included — the epic mandates ≥95% coverage (SC-008) and convergence component tests with **two in-process `Y.Doc`s** (no Go server needed).
 
-**Prereqs (already true)**: B1 upstream-merge done (DRAFT PR #30); fractional indexing,
-`isDeleted`, `customData`, and the imperative API present. Needs only `yjs` + `y-protocols`.
+**Prereqs (already true)**: B1 upstream-merge done (DRAFT PR #30); fractional indexing, `isDeleted`, `customData`, and the imperative API present. Needs only `yjs` + `y-protocols`.
 
 ## Format: `[ID] [P?] [Story] Description (path)`
+
 - **[P]** = parallelizable (different files, no dependency).
 - **[Story]** = the user story / FR it serves.
 
@@ -108,5 +104,4 @@ tests with **two in-process `Y.Doc`s** (no Go server needed).
 - **OPEN-3 — bump locally.** T016 recomputes `version`/`versionNonce` on apply (keeps `hashElementsVersion()` change-detection meaningful; nonce divergence is harmless).
 - **OPEN-4 — defer to core GC.** Binding never hard-deletes tombstones; doc-growth owned by the y-crdt/collaboration-service GC policy (FR-025, ADR-0001).
 
-**Total: 30 tasks across 7 phases.** All implementable and testable in-repo with two
-in-process `Y.Doc`s — no Go server, no v2 codec, no running backend.
+**Total: 30 tasks across 7 phases.** All implementable and testable in-repo with two in-process `Y.Doc`s — no Go server, no v2 codec, no running backend.

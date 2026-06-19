@@ -113,6 +113,7 @@ Create a Pull Request to develop in excalidraw-fork repository
 - Create a PR on the client using the new package, change package.json to the new version and don't forget to run `pnpm i`.
 
 ##### GitHub and NPM configuration for the automatic publishing
+
 - Github's: alkem-io/excalidraw-fork repository has been added as Trusted Publisher in the npmjs repository to be able to publish from the GitHub Actions without tokens.
 
 ### Manually build locally and publish the new npm package (❌ see before, the preferred method)
