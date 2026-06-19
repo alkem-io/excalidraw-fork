@@ -28,3 +28,10 @@ jobs:
           yarn build:esm
           yarn pack --filename package.tgz
           npm publish package.tgz --access public --tag latest
+      - name: Auto release yjs-binding
+        run: |
+          cd packages/yjs-binding
+          yarn install
+          yarn build:esm
+          yarn pack --filename package.tgz
+          npm publish package.tgz --access public --tag latest
