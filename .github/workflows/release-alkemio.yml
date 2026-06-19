@@ -51,11 +51,18 @@ jobs:
 
       # --- Release path: tag v* -> publish both packages to npmjs (OIDC + provenance) ---
 
+      # Build BOTH packages before publishing either one, so a build failure does not
+      # leave one package published and the other missing from the registry.
+      - name: Build packages for release (Tag)
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          yarn --cwd packages/excalidraw build:esm
+          yarn --cwd packages/yjs-binding build:esm
+
       - name: Publish @alkemio/excalidraw to npmjs (Tag)
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         working-directory: packages/excalidraw
         run: |
-          yarn build:esm
           VERSION=$(node -p "require('./package.json').version")
           echo "Publishing @alkemio/excalidraw@${VERSION} to npmjs"
           npm publish --access public --provenance --tag latest
@@ -73,7 +80,6 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         working-directory: packages/yjs-binding
         run: |
-          yarn build:esm
           VERSION=$(node -p "require('./package.json').version")
           echo "Publishing @alkemio/excalidraw-yjs-binding@${VERSION} to npmjs"
           npm publish --access public --provenance --tag latest
