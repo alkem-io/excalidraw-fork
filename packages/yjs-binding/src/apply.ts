@@ -194,8 +194,9 @@ export const applyToScene = (deps: ApplyDeps): ElementRecord[] => {
     api.addFiles(newFiles);
   }
 
-  // Render set excludes tombstones; the full set (incl. tombstones) is what we
-  // hand to updateScene so the soft-delete state is preserved in the scene.
+  // Hand the full set (incl. tombstones) to updateScene so the soft-delete
+  // state is preserved in the scene; the host filters non-deleted elements for
+  // render. `orderByIndex` only sorts — it does not drop tombstones.
   const renderElements = orderByIndex(applied);
 
   api.updateScene({
