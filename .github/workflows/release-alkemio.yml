@@ -14,17 +14,17 @@ name: Release Alkemio package
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     paths:
-      - 'packages/excalidraw/**'
-      - 'packages/yjs-binding/**'
+      - "packages/excalidraw/**"
+      - "packages/yjs-binding/**"
   workflow_dispatch:
 
 permissions:
   contents: read
-  pull-requests: write  # Required for pkg-pr-new PR comments
-  id-token: write       # Required for npm provenance / trusted publishing
+  pull-requests: write # Required for pkg-pr-new PR comments
+  id-token: write # Required for npm provenance / trusted publishing
 
 jobs:
   publish:
@@ -36,7 +36,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.14.0'
+          node-version: "22.14.0"
           # Only point at npmjs on a tag publish; previews use pkg.pr.new and need no registry.
           registry-url: ${{ startsWith(github.ref, 'refs/tags/v') && 'https://registry.npmjs.org' || '' }}
 

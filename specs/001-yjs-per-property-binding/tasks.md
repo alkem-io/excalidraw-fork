@@ -13,11 +13,11 @@
 
 ## Phase 1: Setup & schema
 
-- [X] T001 Scaffold `packages/yjs-binding/` package: `package.json` (deps `yjs`, `y-protocols`, `@excalidraw/element`, `@excalidraw/fractional-indexing`), `tsconfig.json`, build wiring matching the monorepo's other packages. (`packages/yjs-binding/package.json`)
-- [X] T002 Define root-name constants and the origin sentinel: `ELEMENTS`, `FILES`, `APPSTATE` (synced allow-list `viewBackgroundColor`, `name` — OPEN-2 resolved), and a unique `BINDING_ORIGIN` object. (`packages/yjs-binding/src/origin.ts`, `src/schema.ts`)
-- [X] T003 [US1] Implement `elementToYMap(element)` / `yMapToElement(ymap)` encode/decode honoring the representation tiering (scalars as plain values; JSON-leaf for `points`, `pressures`, `groupIds`, `roundness`, `startBinding`/`endBinding`/`fixedSegments`, `scale`, `crop`, `customData`; **`boundElements` → nested `Y.Map<id,"arrow"|"text">` add/remove set per §4.1**) per data-model §2/§4. Derive keys from the live element object, not a hand-list. (`packages/yjs-binding/src/schema.ts`)
-- [X] T004 Add unit tests for `schema.ts`: every base + subtype field round-trips; JSON-leaf deep-equal; scalars `===`. (`packages/yjs-binding/tests/schema.test.ts`)
-- [X] T005 [P] [US3] Implement order helpers wrapping `@excalidraw/fractional-indexing`: `orderByIndex`, `keyBetween(prev,next)`, `repairIndices` (= `syncInvalidIndices`). No bespoke ordering. (`packages/yjs-binding/src/order.ts`) — data-model §3
+- [x] T001 Scaffold `packages/yjs-binding/` package: `package.json` (deps `yjs`, `y-protocols`, `@excalidraw/element`, `@excalidraw/fractional-indexing`), `tsconfig.json`, build wiring matching the monorepo's other packages. (`packages/yjs-binding/package.json`)
+- [x] T002 Define root-name constants and the origin sentinel: `ELEMENTS`, `FILES`, `APPSTATE` (synced allow-list `viewBackgroundColor`, `name` — OPEN-2 resolved), and a unique `BINDING_ORIGIN` object. (`packages/yjs-binding/src/origin.ts`, `src/schema.ts`)
+- [x] T003 [US1] Implement `elementToYMap(element)` / `yMapToElement(ymap)` encode/decode honoring the representation tiering (scalars as plain values; JSON-leaf for `points`, `pressures`, `groupIds`, `roundness`, `startBinding`/`endBinding`/`fixedSegments`, `scale`, `crop`, `customData`; **`boundElements` → nested `Y.Map<id,"arrow"|"text">` add/remove set per §4.1**) per data-model §2/§4. Derive keys from the live element object, not a hand-list. (`packages/yjs-binding/src/schema.ts`)
+- [x] T004 Add unit tests for `schema.ts`: every base + subtype field round-trips; JSON-leaf deep-equal; scalars `===`. (`packages/yjs-binding/tests/schema.test.ts`)
+- [x] T005 [P] [US3] Implement order helpers wrapping `@excalidraw/fractional-indexing`: `orderByIndex`, `keyBetween(prev,next)`, `repairIndices` (= `syncInvalidIndices`). No bespoke ordering. (`packages/yjs-binding/src/order.ts`) — data-model §3
 
 **Checkpoint**: an element converts losslessly to/from its `Y.Map`; ordering primitives exist.
 
@@ -25,11 +25,11 @@
 
 ## Phase 2: onChange → Y write path (US1/US2)
 
-- [X] T006 [US2] Implement the cheap change gate `areElementsSame(prev, next)` comparing `(id, version)` pairs (fast path to skip no-op `onChange`s). (`packages/yjs-binding/src/diff.ts`) — data-model §8 Diff
-- [X] T007 [US1] Implement per-element **per-property** delta computation: for an existing element write only changed keys (deep-compare JSON-leaf, `===` scalars; **`boundElements` diffs into its nested `Y.Map` via `set(id,type)`/`delete(id)`, §4.1**); for a new element write all keys + `keyBetween` `index`; for a removed element set `isDeleted=true` (tombstone, never `Y.Map.delete`). Also diff the `APPSTATE` allow-list (`viewBackgroundColor`, `name`) on local change. (`packages/yjs-binding/src/diff.ts`) — FR-B-001/002/006
-- [X] T008 [US1] Apply all element writes in **one** `ydoc.transact(fn, BINDING_ORIGIN)`; update `lastKnownElements`. (`packages/yjs-binding/src/diff.ts`) — FR-B-002
-- [X] T009 [P] [US1] Implement files diff in a separate map: append new `BinaryFileData`, remove dropped ids, origin-tagged. (`packages/yjs-binding/src/files.ts`) — FR-B-007
-- [X] T010 [US2] Add tests: a single-property change emits exactly one transaction writing exactly one key; a no-op `onChange` emits no transaction. (`packages/yjs-binding/tests/echo.test.ts`)
+- [x] T006 [US2] Implement the cheap change gate `areElementsSame(prev, next)` comparing `(id, version)` pairs (fast path to skip no-op `onChange`s). (`packages/yjs-binding/src/diff.ts`) — data-model §8 Diff
+- [x] T007 [US1] Implement per-element **per-property** delta computation: for an existing element write only changed keys (deep-compare JSON-leaf, `===` scalars; **`boundElements` diffs into its nested `Y.Map` via `set(id,type)`/`delete(id)`, §4.1**); for a new element write all keys + `keyBetween` `index`; for a removed element set `isDeleted=true` (tombstone, never `Y.Map.delete`). Also diff the `APPSTATE` allow-list (`viewBackgroundColor`, `name`) on local change. (`packages/yjs-binding/src/diff.ts`) — FR-B-001/002/006
+- [x] T008 [US1] Apply all element writes in **one** `ydoc.transact(fn, BINDING_ORIGIN)`; update `lastKnownElements`. (`packages/yjs-binding/src/diff.ts`) — FR-B-002
+- [x] T009 [P] [US1] Implement files diff in a separate map: append new `BinaryFileData`, remove dropped ids, origin-tagged. (`packages/yjs-binding/src/files.ts`) — FR-B-007
+- [x] T010 [US2] Add tests: a single-property change emits exactly one transaction writing exactly one key; a no-op `onChange` emits no transaction. (`packages/yjs-binding/tests/echo.test.ts`)
 
 **Checkpoint**: local edits produce minimal, origin-tagged per-property Yjs writes.
 
@@ -37,12 +37,12 @@
 
 ## Phase 3: Y observe → scene apply path (US3)
 
-- [X] T011 [US3] Implement scene `observeDeep` + files `observe`; on each event, **echo-guard** `if (transaction.origin === BINDING_ORIGIN) return`. (`packages/yjs-binding/src/apply.ts`) — FR-B-004
-- [X] T012 [US3] Rebuild only affected elements from their `Y.Map`s; reuse unchanged local elements; do not rebuild the whole scene (O(changed)). (`packages/yjs-binding/src/apply.ts`) — NFR-B-001
-- [X] T013 [US3] Order applied elements by `index` (`orderByIndex`) and run `repairIndices` for concurrent equal-index collisions (write repairs back under `BINDING_ORIGIN`). (`packages/yjs-binding/src/apply.ts`) — data-model §3, US3-AC3
-- [X] T014 [US3] Filter tombstones for render (`getNonDeletedElements`) while retaining them in the doc; honor merged `isDeleted`. (`packages/yjs-binding/src/apply.ts`) — FR-B-006, US1-AC3
-- [X] T015 [US2] Implement the "actively editing" guard: skip replacing an element the local user is mid-editing (text edit / resize / new element), mirroring `shouldDiscardRemoteElement`'s editing checks. (`packages/yjs-binding/src/apply.ts`) — FR-B-013
-- [X] T016 [US2] Call `api.updateScene({ elements, captureUpdate: CaptureUpdateAction.NEVER })`; apply the synced `APPSTATE` allow-list (`viewBackgroundColor`, `name`) from the doc; preserve local-only `appState` (selection/zoom/scroll/tool). (`packages/yjs-binding/src/apply.ts`) — FR-B-003
+- [x] T011 [US3] Implement scene `observeDeep` + files `observe`; on each event, **echo-guard** `if (transaction.origin === BINDING_ORIGIN) return`. (`packages/yjs-binding/src/apply.ts`) — FR-B-004
+- [x] T012 [US3] Rebuild only affected elements from their `Y.Map`s; reuse unchanged local elements; do not rebuild the whole scene (O(changed)). (`packages/yjs-binding/src/apply.ts`) — NFR-B-001
+- [x] T013 [US3] Order applied elements by `index` (`orderByIndex`) and run `repairIndices` for concurrent equal-index collisions (write repairs back under `BINDING_ORIGIN`). (`packages/yjs-binding/src/apply.ts`) — data-model §3, US3-AC3
+- [x] T014 [US3] Filter tombstones for render (`getNonDeletedElements`) while retaining them in the doc; honor merged `isDeleted`. (`packages/yjs-binding/src/apply.ts`) — FR-B-006, US1-AC3
+- [x] T015 [US2] Implement the "actively editing" guard: skip replacing an element the local user is mid-editing (text edit / resize / new element), mirroring `shouldDiscardRemoteElement`'s editing checks. (`packages/yjs-binding/src/apply.ts`) — FR-B-013
+- [x] T016 [US2] Call `api.updateScene({ elements, captureUpdate: CaptureUpdateAction.NEVER })`; apply the synced `APPSTATE` allow-list (`viewBackgroundColor`, `name`) from the doc; preserve local-only `appState` (selection/zoom/scroll/tool). (`packages/yjs-binding/src/apply.ts`) — FR-B-003
 
 **Checkpoint**: remote per-property changes render in correct order with tombstones, no echo, no lost local selection.
 
@@ -50,34 +50,34 @@
 
 ## Phase 4: Loop guard & binding lifecycle
 
-- [X] T017 [US2] Wire it together in `WhiteboardBinding`: constructor `(ydoc, api, awareness?)` attaches `api.onChange`→diff and the observers→apply; seeds `lastKnownElements` from the doc. (`packages/yjs-binding/src/index.ts`) — FR-B-011
-- [X] T018 [US2] Implement `destroy()` detaching every observer + `onChange`/awareness subscription; null caches; no leaks on remount. (`packages/yjs-binding/src/index.ts`) — FR-B-012
-- [X] T019 [US2] Echo regression test: a full local-edit → write → own-observe cycle triggers **zero** re-entrant `updateScene`. (`packages/yjs-binding/tests/echo.test.ts`) — SC-B-003
+- [x] T017 [US2] Wire it together in `WhiteboardBinding`: constructor `(ydoc, api, awareness?)` attaches `api.onChange`→diff and the observers→apply; seeds `lastKnownElements` from the doc. (`packages/yjs-binding/src/index.ts`) — FR-B-011
+- [x] T018 [US2] Implement `destroy()` detaching every observer + `onChange`/awareness subscription; null caches; no leaks on remount. (`packages/yjs-binding/src/index.ts`) — FR-B-012
+- [x] T019 [US2] Echo regression test: a full local-edit → write → own-observe cycle triggers **zero** re-entrant `updateScene`. (`packages/yjs-binding/tests/echo.test.ts`) — SC-B-003
 
 ---
 
 ## Phase 5: Awareness / ephemeral routing (US4 — FR-008)
 
-- [X] T020 [US4] Route cursor/pointer (`onPointerUpdate`), selection, and idle to `awareness.setLocalStateField`; surface remote awareness via `api.updateScene({ collaborators })` (no element mutation). (`packages/yjs-binding/src/awareness.ts`) — FR-B-008, data-model §7
-- [X] T021 [US4] Route emoji reactions / countdown timer / visible-scene-bounds to the **ephemeral** channel and dispatch incoming via `dispatchIncomingEmojiReaction` / `dispatchIncomingCountdownTimer`; **never** touch the scene doc. (`packages/yjs-binding/src/awareness.ts`) — FR-B-008
-- [X] T022 [US4] Awareness isolation test: a burst of pointer/emoji/countdown events produces **zero** scene-doc transactions and the scene snapshot is byte-identical before/after. (`packages/yjs-binding/tests/awareness.test.ts`) — SC-B-004
+- [x] T020 [US4] Route cursor/pointer (`onPointerUpdate`), selection, and idle to `awareness.setLocalStateField`; surface remote awareness via `api.updateScene({ collaborators })` (no element mutation). (`packages/yjs-binding/src/awareness.ts`) — FR-B-008, data-model §7
+- [x] T021 [US4] Route emoji reactions / countdown timer / visible-scene-bounds to the **ephemeral** channel and dispatch incoming via `dispatchIncomingEmojiReaction` / `dispatchIncomingCountdownTimer`; **never** touch the scene doc. (`packages/yjs-binding/src/awareness.ts`) — FR-B-008
+- [x] T022 [US4] Awareness isolation test: a burst of pointer/emoji/countdown events produces **zero** scene-doc transactions and the scene snapshot is byte-identical before/after. (`packages/yjs-binding/tests/awareness.test.ts`) — SC-B-004
 
 ---
 
 ## Phase 6: Migration round-trip (US5 — FR-B-010)
 
-- [X] T023 [US5] Implement `populateYDoc(sceneJSON, ydoc)`: write every element to the scene map (tombstones included), files to the files map; repair missing/invalid `index`. (`packages/yjs-binding/src/migrate.ts`) — data-model §6
-- [X] T024 [US5] Implement `exportSceneJSON(ydoc)`: read back to an Excalidraw scene (ordered by `index`). (`packages/yjs-binding/src/migrate.ts`)
-- [X] T025 [US5] Round-trip test: representative scene (text+arrow `points`+image `fileId`+grouped+soft-deleted+`customData`+bound text/arrows) is deep-equal modulo the §6 normalization rules. (`packages/yjs-binding/tests/roundtrip.test.ts`) — SC-B-005
+- [x] T023 [US5] Implement `populateYDoc(sceneJSON, ydoc)`: write every element to the scene map (tombstones included), files to the files map; repair missing/invalid `index`. (`packages/yjs-binding/src/migrate.ts`) — data-model §6
+- [x] T024 [US5] Implement `exportSceneJSON(ydoc)`: read back to an Excalidraw scene (ordered by `index`). (`packages/yjs-binding/src/migrate.ts`)
+- [x] T025 [US5] Round-trip test: representative scene (text+arrow `points`+image `fileId`+grouped+soft-deleted+`customData`+bound text/arrows) is deep-equal modulo the §6 normalization rules. (`packages/yjs-binding/tests/roundtrip.test.ts`) — SC-B-005
 
 ---
 
 ## Phase 7: Convergence component tests + WS-F contribution (US1 — SC-B-001/002)
 
-- [X] T026 [US1] Two-`Y.Doc` merge test: bindings A/B on one element; A sets position, B sets `strokeColor` while partitioned; exchange updates; assert both scenes carry both edits. (`packages/yjs-binding/tests/merge.test.ts`) — SC-B-001
-- [X] T027 [P] [US1] Same-property tiebreak test: A and B set the same key differently; after sync both converge to one deterministic value, no divergence/exception. (`packages/yjs-binding/tests/merge.test.ts`) — US1-AC2
-- [X] T028 [P] [US1] Delete-vs-edit test: A tombstones an element while B edits a property; converge to a single consistent outcome (tombstone wins render, edit retained). (`packages/yjs-binding/tests/merge.test.ts`) — US1-AC3
-- [X] T029 [P] [US3] Concurrent order test: A and B insert elements that pick equal fractional `index`; `repairIndices` converges both to identical order. (`packages/yjs-binding/tests/apply-order.test.ts`) — US3-AC3
+- [x] T026 [US1] Two-`Y.Doc` merge test: bindings A/B on one element; A sets position, B sets `strokeColor` while partitioned; exchange updates; assert both scenes carry both edits. (`packages/yjs-binding/tests/merge.test.ts`) — SC-B-001
+- [x] T027 [P] [US1] Same-property tiebreak test: A and B set the same key differently; after sync both converge to one deterministic value, no divergence/exception. (`packages/yjs-binding/tests/merge.test.ts`) — US1-AC2
+- [x] T028 [P] [US1] Delete-vs-edit test: A tombstones an element while B edits a property; converge to a single consistent outcome (tombstone wins render, edit retained). (`packages/yjs-binding/tests/merge.test.ts`) — US1-AC3
+- [x] T029 [P] [US3] Concurrent order test: A and B insert elements that pick equal fractional `index`; `repairIndices` converges both to identical order. (`packages/yjs-binding/tests/apply-order.test.ts`) — US3-AC3
 - [~] T030 Contribute the two-doc convergence + awareness-isolation scenarios to the shared WS-F e2e harness; ensure the package's coverage gate (≥95%) is wired into CI. (cross-repo: WS-F harness; `packages/yjs-binding` CI) — SC-B-006 / epic SC-008/SC-009
   - **In-repo part DONE**: the two-doc convergence scenarios (`merge.test.ts`) and awareness-isolation scenario (`awareness.test.ts`) exist and pass; package coverage measured at **97.7% statements / 100% functions** (above the ≥95% gate) via `vitest run --coverage`.
   - **Deferred (cross-repo)**: contributing these scenarios to the shared **WS-F** e2e harness and wiring the ≥95% threshold into the repo's CI workflow live outside this package and are owned by WS-F. Not done here.
