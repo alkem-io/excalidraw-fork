@@ -45,5 +45,8 @@
     "@excalidraw/fractional-indexing": "3.3.0",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.27"
+  },
+  "peerDependencies": {
+    "@alkemio/excalidraw": ">=0.18.0"
   }
 }

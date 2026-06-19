@@ -6,7 +6,12 @@ import type {
   ExcalidrawImperativeAPI,
 } from "@excalidraw/excalidraw/types";
 
-import { BINDING_ORIGIN, APPSTATE_ALLOW_LIST, yMapToElement } from "./schema";
+import {
+  BINDING_ORIGIN,
+  APPSTATE_ALLOW_LIST,
+  yMapToElement,
+  deepEqual,
+} from "./schema";
 import { orderByIndex, repairIndices } from "./order";
 import { readFiles } from "./files";
 
@@ -86,7 +91,7 @@ const bumpVersion = (
     if (key === "version" || key === "versionNonce" || key === "updated") {
       continue;
     }
-    if (JSON.stringify(prev[key]) !== JSON.stringify(next[key])) {
+    if (!deepEqual(prev[key], next[key])) {
       changed = true;
       break;
     }
