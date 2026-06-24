@@ -1902,6 +1902,17 @@ export class ElementsDelta implements DeltaContainer<SceneElementsMap> {
 
       // needs ordered nextElements to avoid z-index binding issues
       ElementsDelta.redrawBoundArrows(tempScene, changedElements);
+
+      // fresh-snapshot: re-read post-mutation (native-Yjs core). The redraws
+      // above mutate `tempScene`, which `new Scene(nextElements, …)` cloned into
+      // its OWN Y.Doc — so `nextElements` itself is untouched. Sync the redrawn
+      // elements back into `nextElements` (same id set, overwriting values keeps
+      // the Map's insertion order) or the container resizes + bound-arrow point
+      // updates would be silently lost on every delta apply (undo/redo).
+      const redrawn = tempScene.getElementsMapIncludingDeleted();
+      for (const [id, element] of redrawn) {
+        nextElements.set(id, element);
+      }
     } catch (e) {
       console.error(`Couldn't redraw elements`, e);
 

@@ -69,8 +69,20 @@ const alignSelectedElements = (
 
   const updatedElementsMap = arrayToMap(updatedElements);
 
+  // fresh-snapshot: re-read post-mutation (alignElements moved the selection's
+  // BOUND ARROWS through the doc via updateBoundElements, but those arrows are
+  // not in `updatedElements` when not themselves selected — fall back to the
+  // live scene map instead of the stale input `element` so their doc-written
+  // points are not reverted)
+  const freshMap = app.scene.getNonDeletedElementsMap();
+
   return updateFrameMembershipOfSelectedElements(
-    elements.map((element) => updatedElementsMap.get(element.id) || element),
+    elements.map(
+      (element) =>
+        updatedElementsMap.get(element.id) ??
+        freshMap.get(element.id) ??
+        element,
+    ),
     appState,
     app,
   );

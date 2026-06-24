@@ -1259,9 +1259,18 @@ const updateArrowBindings = (
       strategy[strategyName].element?.id === bindableElement.id &&
       strategy[strategyName].mode
     ) {
+      // fresh-snapshot: re-read post-mutation (unbindBindingElement above removed
+      // this arrow from the bindable's `boundElements` through the doc, so the
+      // captured `bindableElement` is stale — bindBindingElement's has()-check
+      // would still see the arrow and skip re-adding the back-reference, leaving
+      // an asymmetric binding. Re-read live so the re-add fires)
+      const freshBindable =
+        (scene.getElement(
+          bindableElement.id,
+        ) as ExcalidrawBindableElement | null) ?? bindableElement;
       bindBindingElement(
         latestElement,
-        bindableElement,
+        freshBindable,
         strategy[strategyName].mode,
         strategyName,
         scene,

@@ -172,8 +172,20 @@ export const actionBindText = register({
     // it can be restored when unbind
     updateOriginalContainerCache(container.id, originalContainerHeight);
 
+    // fresh-snapshot: re-read post-mutation (scene.mutateElement +
+    // redrawTextBoundingBox wrote the CONTAINER's boundElements + resized
+    // dimensions to the doc, but `pushTextAboveContainer` keeps the stale
+    // input-array container entry — re-read live so the bind + container resize
+    // is not reverted)
+    const freshMap = app.scene.getNonDeletedElementsMap();
+    const nextElements = pushTextAboveContainer(
+      elements,
+      container,
+      textElement,
+    ).map((element) => freshMap.get(element.id) ?? element);
+
     return {
-      elements: pushTextAboveContainer(elements, container, textElement),
+      elements: nextElements,
       appState: { ...appState, selectedElementIds: { [container.id]: true } },
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     };
@@ -326,6 +338,17 @@ export const actionWrapTextInContainer = register({
         containerIds[container.id] = true;
       }
     }
+
+    // fresh-snapshot: re-read post-mutation (the just-wrapped TEXT element + any
+    // re-bound arrows were written to the doc via scene.mutateElement /
+    // redrawTextBoundingBox, but `updatedElements` carries their stale input
+    // entries — re-read live so the wrap (containerId/autoResize/boundElements)
+    // is not reverted. New containers are not yet in the doc, so the `?? element`
+    // fallback preserves them)
+    const freshMap = app.scene.getNonDeletedElementsMap();
+    updatedElements = updatedElements.map(
+      (element) => freshMap.get(element.id) ?? element,
+    );
 
     return {
       elements: updatedElements,

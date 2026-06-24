@@ -86,8 +86,11 @@ export const actionPasteStyles = register({
       includeBoundTextElement: true,
     });
     const selectedElementIds = selectedElements.map((element) => element.id);
-    return {
-      elements: elements.map((element) => {
+    // containers whose dimensions redrawTextBoundingBox wrote to the doc — only
+    // these need a post-mutation fresh re-read (the styled elements themselves
+    // carry their new values in the returned copy, NOT in the doc)
+    const redrawnContainerIds = new Set<string>();
+    const nextElements = elements.map((element) => {
         if (selectedElementIds.includes(element.id)) {
           let elementStylesToCopyFrom = pastedElement;
           if (isTextElement(element) && element.containerId) {
@@ -142,6 +145,9 @@ export const actionPasteStyles = register({
             }
 
             redrawTextBoundingBox(newElement, container, app.scene);
+            if (container) {
+              redrawnContainerIds.add(container.id);
+            }
           }
 
           if (
@@ -164,7 +170,21 @@ export const actionPasteStyles = register({
           return newElement;
         }
         return element;
-      }),
+      });
+
+    // fresh-snapshot: re-read post-mutation (redrawTextBoundingBox resized the
+    // bound-text CONTAINER through the doc, but the array carries a separate,
+    // pre-redraw `newElementWith` copy of that container — re-read ONLY those
+    // containers live so the resize is not reverted; the styled elements carry
+    // their pasted values in the returned copy (not the doc) and must be kept)
+    const freshMap = app.scene.getNonDeletedElementsMap();
+
+    return {
+      elements: nextElements.map((element) =>
+        redrawnContainerIds.has(element.id)
+          ? freshMap.get(element.id) ?? element
+          : element,
+      ),
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     };
   },

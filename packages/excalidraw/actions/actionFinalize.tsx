@@ -59,6 +59,43 @@ export const actionFinalize = register<FormData>({
     const { interactiveCanvas, focusContainer, scene } = app;
     const elementsMap = scene.getNonDeletedElementsMap();
 
+    // fresh-snapshot: ids of the bindable TARGETS whose `boundElements`
+    // bindOrUnbindBindingElement wrote through the doc below. The returned
+    // `newElements`/`elements` array can hold a STALE copy of such a target
+    // (detached by the point-trim recompute), so we re-read ONLY these ids live
+    // from the doc at the return — never the primary arrow, whose finalize state
+    // (trimmed points / tombstone flag) lives only in the returned copy.
+    const reboundTargetIds = new Set<string>();
+    // Capture both the BEFORE and AFTER binding targets around each (un)bind: an
+    // unbind empties the OLD target's `boundElements` in the doc (so the stale
+    // return would re-add a phantom back-ref), while a bind fills the NEW
+    // target's — re-reading both ids fresh covers either direction.
+    const trackReboundTargets = (
+      arrow: NonDeleted<ExcalidrawLinearElement> | null,
+    ) => {
+      if (arrow?.startBinding?.elementId) {
+        reboundTargetIds.add(arrow.startBinding.elementId);
+      }
+      if (arrow?.endBinding?.elementId) {
+        reboundTargetIds.add(arrow.endBinding.elementId);
+      }
+    };
+    // Re-read the side-effected bindable targets fresh from the doc, leaving the
+    // primary arrow (and every other element) as the returned copy.
+    const freshenReboundTargets = (
+      arr: readonly ExcalidrawElement[],
+    ): readonly ExcalidrawElement[] => {
+      if (reboundTargetIds.size === 0) {
+        return arr;
+      }
+      const freshMap = scene.getNonDeletedElementsMap();
+      return arr.map((element) =>
+        reboundTargetIds.has(element.id)
+          ? freshMap.get(element.id) ?? element
+          : element,
+      );
+    };
+
     if (data && appState.selectedLinearElement) {
       const { event, sceneCoords } = data;
       const element = LinearElementEditor.getElement(
@@ -109,6 +146,8 @@ export const actionFinalize = register<FormData>({
 
             return map;
           }, new Map()) ?? new Map();
+        // targets bound BEFORE this (un)bind (an unbind clears one of these)
+        trackReboundTargets(element);
         bindOrUnbindBindingElement(
           element,
           draggedPoints,
@@ -121,6 +160,14 @@ export const actionFinalize = register<FormData>({
             altKey: event.altKey,
             angleLocked: shouldRotateWithDiscreteAngle(event),
           },
+        );
+        // targets bound AFTER — re-read the arrow fresh, since
+        // bindOrUnbindBindingElement wrote its bindings through the doc and the
+        // captured `element` may not reflect them.
+        trackReboundTargets(
+          scene.getElement(
+            element.id,
+          ) as NonDeleted<ExcalidrawLinearElement> | null,
         );
       } else if (isLineElement(element)) {
         if (
@@ -154,7 +201,7 @@ export const actionFinalize = register<FormData>({
         const activeToolLocked = appState.activeTool?.locked;
 
         return {
-          elements:
+          elements: freshenReboundTargets(
             element.points.length < 2 || isInvisiblySmallElement(element)
               ? elements.map((el) => {
                   if (el.id === element.id) {
@@ -163,6 +210,7 @@ export const actionFinalize = register<FormData>({
                   return el;
                 })
               : newElements,
+          ),
           appState: {
             ...appState,
             cursorButton: "up",
@@ -260,6 +308,8 @@ export const actionFinalize = register<FormData>({
                 -1,
                 elementsMap,
               );
+            // targets bound BEFORE this (un)bind
+            trackReboundTargets(element);
             bindOrUnbindBindingElement(
               element,
               draggedPoints,
@@ -270,6 +320,17 @@ export const actionFinalize = register<FormData>({
               {
                 newArrow,
               },
+            );
+            // targets bound AFTER. The trailing-point trim above
+            // (`scene.mutateElement(element, { points })`) fired a recompute that
+            // detached the returned array's copy of this target from the live
+            // one, so bindOrUnbindBindingElement's doc write to its
+            // `boundElements` would otherwise be reverted by the stale return —
+            // re-read it fresh at the return instead.
+            trackReboundTargets(
+              scene.getElement(
+                element.id,
+              ) as NonDeleted<ExcalidrawLinearElement> | null,
             );
           }
         }
@@ -361,7 +422,7 @@ export const actionFinalize = register<FormData>({
       : selectedLinearElement;
 
     return {
-      elements: newElements,
+      elements: freshenReboundTargets(newElements),
       appState: {
         ...appState,
         cursorButton: "up",
