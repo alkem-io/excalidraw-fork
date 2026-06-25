@@ -148,12 +148,16 @@ describe("actionDeleteSelected — elbow-binding branch re-converges (not stale-
       return orig(nextElements, opts);
     };
 
-    API.setSelectedElements([liveRect(rect1.id)]);
-    act(() => {
-      h.app.actionManager.executeAction(actionDeleteSelected);
-    });
-
-    scene.replaceAllElements = orig;
+    try {
+      API.setSelectedElements([liveRect(rect1.id)]);
+      act(() => {
+        h.app.actionManager.executeAction(actionDeleteSelected);
+      });
+    } finally {
+      // Always restore the monkeypatch, even if the action throws — otherwise the
+      // patched replaceAllElements leaks into and poisons later tests.
+      scene.replaceAllElements = orig;
+    }
 
     // Despite the elbow branch's stale return, fixBindingsAfterDeletion re-nulled
     // the binding on the returned array → the doc write lands as null.

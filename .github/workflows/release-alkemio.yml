@@ -21,6 +21,12 @@ on:
   pull_request:
     paths:
       - "packages/excalidraw/**"
+      # also exercise the preview when the build/config that shapes the package
+      # artifact changes, not just the package sources themselves
+      - "scripts/buildBase.js"
+      - "packages/tsconfig.base.json"
+      - "tsconfig.json"
+      - ".github/workflows/release-alkemio.yml"
   workflow_dispatch:
 
 permissions:
@@ -34,6 +40,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          # No later step runs authenticated git (publish uses npm OIDC /
+          # pkg.pr.new, not git push), so don't persist repo credentials.
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,7 +56,10 @@ jobs:
       # (matrix-adapter runs on node 24 which already ships npm 11+, so it omits this.)
       - name: Upgrade npm for trusted publishing
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: npm install -g npm@latest
+        # Pin to a vetted 11.x (>= the 11.5.1 OIDC-trusted-publishing minimum)
+        # instead of npm@latest, so a tag publish doesn't depend on whatever npm
+        # ships that day.
+        run: npm install -g npm@11.5.1
 
       - name: Install workspace dependencies
         run: yarn install
@@ -114,11 +127,21 @@ jobs:
               echo "npm i ${URL}" >> $GITHUB_STEP_SUMMARY
             done <<< "$URLS"
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          else
+          elif [ $STATUS -ne 0 ]; then
             echo "## ⚠️ Preview publish failed" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
             echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
             exit $STATUS
+          else
+            # exit 0 but no install URL emitted (e.g. the output format changed):
+            # the preview artifact was NOT produced, so fail loudly instead of
+            # reporting green.
+            echo "## ⚠️ Preview publish produced no install URL" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            exit 1
           fi

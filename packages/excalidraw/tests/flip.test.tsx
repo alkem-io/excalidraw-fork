@@ -4,7 +4,10 @@ import { ROUNDNESS, KEYS, arrayToMap, cloneJSON } from "@excalidraw/common";
 
 import { pointFrom, type Radians } from "@excalidraw/math";
 
-import { getBoundTextElementPosition } from "@excalidraw/element";
+import {
+  getBoundTextElement,
+  getBoundTextElementPosition,
+} from "@excalidraw/element";
 import { getElementAbsoluteCoords } from "@excalidraw/element";
 import { newLinearElement } from "@excalidraw/element";
 
@@ -889,10 +892,18 @@ describe("mutliple elements", () => {
 
     // Derived elements are fresh immutable snapshots minted on every recompute,
     // so a captured reference goes stale after the flip actions above. Read the
-    // bound-text elements live from the scene by id at assertion time.
-    const arrowTextId = (h.elements[1] as ExcalidrawTextElementWithContainer)
-      .id;
-    const rectTextId = (h.elements[3] as ExcalidrawTextElementWithContainer).id;
+    // bound-text elements live from the scene by id at assertion time. Resolve
+    // the ids from the arrow/rectangle CONTAINER relationship rather than fixed
+    // scene-array slots, so a reorder in materialization can't bind the test to
+    // the wrong text element.
+    const arrowTextId = getBoundTextElement(
+      arrow.get(),
+      arrayToMap(h.elements),
+    )!.id;
+    const rectTextId = getBoundTextElement(
+      rectangle.get(),
+      arrayToMap(h.elements),
+    )!.id;
     const arrowText = () =>
       h.elements.find(
         (e) => e.id === arrowTextId,

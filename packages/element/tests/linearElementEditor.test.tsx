@@ -1461,7 +1461,7 @@ describe("Test Linear Elements", () => {
       const liveContainer = () =>
         h.elements.find((e) => e.id === container.id)!;
       expect(liveContainer().boundElements).toStrictEqual([
-        { id: h.elements[1].id, type: "text" },
+        { id: liveText().id, type: "text" },
       ]);
       expect(
         (liveText() as ExcalidrawTextElementWithContainer).containerId,

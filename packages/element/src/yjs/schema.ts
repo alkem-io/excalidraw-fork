@@ -370,12 +370,20 @@ export const writeChangedKeys = (
   for (const key of [...ymap.keys()]) {
     if (
       key !== "id" &&
-      key !== BOUND_ELEMENTS_KEY &&
       !RECONCILE_META_KEYS.has(key) &&
       !Object.prototype.hasOwnProperty.call(element, key)
     ) {
-      ymap.delete(key);
-      writes++;
+      if (key === BOUND_ELEMENTS_KEY) {
+        // boundElements is a nested Y.Map, not a plain scalar: empty it via
+        // diffBoundElements (deleting the parent key would drop the nested map
+        // and break the next diff). Symmetric with the `next === undefined`
+        // branch above — a dropped property must clear bindings just like an
+        // explicit `undefined`, else stale bindings resurrect on materialization.
+        writes += diffBoundElements(ymap, null);
+      } else {
+        ymap.delete(key);
+        writes++;
+      }
     }
   }
   return writes;
@@ -638,4 +646,9 @@ export const decodeSnapshot = (bytes: Uint8Array): WhiteboardSnapshot => {
   return { elements, files, appState };
 };
 
-export { LOCAL_ORIGIN };
+// NB: do NOT re-export LOCAL_ORIGIN here. It is declared in ./origin and the
+// `yjs` barrel (index.ts) already re-exports it via `export * from "./origin"`.
+// Re-exporting the same name from this module too made it an ambiguous star
+// export in the barrel (`export *` from both ./origin and ./schema), which
+// silently drops `LOCAL_ORIGIN` from `@alkemio/excalidraw`'s `yjs` entrypoint.
+// `schema.ts` still imports it (line ~3) for its own internal use.

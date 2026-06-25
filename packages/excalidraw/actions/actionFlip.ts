@@ -149,8 +149,22 @@ const flipElements = (
     },
   );
 
+  // Fresh-snapshot (native-Yjs core): `resizeMultipleElements` mutates each
+  // container's object in place but repositions BOUND TEXTS (and re-routes arrows)
+  // through the doc, so the arrow objects inside `selectedElements` are stale
+  // (pre-flip). Re-read every selected element live BEFORE binding reconciliation
+  // so `bindOrUnbindBindingElements` operates on the flipped arrow geometry/
+  // bindings, not the pre-flip snapshot. The same fresh array also feeds the
+  // post-flip bounding box and re-centering below — a stale bound-text position
+  // would skew the box and produce a spurious offset that drags the
+  // correctly-positioned text out of place.
+  const freshMap = app.scene.getNonDeletedElementsMap();
+  const flippedElements = selectedElements.map(
+    (element) => freshMap.get(element.id) ?? element,
+  );
+
   bindOrUnbindBindingElements(
-    selectedElements.filter(isArrowElement),
+    flippedElements.filter(isArrowElement),
     app.scene,
     app.state,
   );
@@ -160,18 +174,6 @@ const flipElements = (
   // "move" across the canvas because of how arrows can bump against the "wall"
   // of the selection, so we need to center the group back to the original
   // position so that repeated flips don't accumulate the offset
-
-  // Fresh-snapshot (native-Yjs core): `resizeMultipleElements` mutates each
-  // container's object in place but repositions BOUND TEXTS through the doc, so
-  // the bound-text objects inside `selectedElements` are stale (pre-flip). Re-read
-  // every selected element live so the post-flip bounding box (and the
-  // re-centering below) use the actual flipped coordinates — a stale bound-text
-  // position would skew the box and produce a spurious offset that drags the
-  // correctly-positioned text out of place.
-  const freshMap = app.scene.getNonDeletedElementsMap();
-  const flippedElements = selectedElements.map(
-    (element) => freshMap.get(element.id) ?? element,
-  );
 
   const { elbowArrows, otherElements } = flippedElements.reduce(
     (

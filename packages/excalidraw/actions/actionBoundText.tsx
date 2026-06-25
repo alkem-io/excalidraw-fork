@@ -38,7 +38,6 @@ import { CaptureUpdateAction } from "@excalidraw/element";
 
 import type {
   ExcalidrawElement,
-  ExcalidrawLinearElement,
   ExcalidrawTextContainer,
   ExcalidrawTextElement,
 } from "@excalidraw/element/types";
@@ -292,9 +291,18 @@ export const actionWrapTextInContainer = register({
           const linearElementIds = textElement.boundElements
             .filter((ele) => ele.type === "arrow")
             .map((el) => el.id);
-          const linearElements = updatedElements.filter((ele) =>
-            linearElementIds.includes(ele.id),
-          ) as ExcalidrawLinearElement[];
+          // fresh-snapshot (native-Yjs core): read the bound arrows LIVE from the
+          // doc, not from the stale `updatedElements` snapshot. When two selected
+          // text elements are opposite endpoints of the SAME arrow, the second
+          // loop iteration must see the first iteration's rebind (already written
+          // through the doc) — otherwise it would re-derive the arrow from the
+          // pre-first-wrap snapshot and clobber the earlier rebind. Arrows always
+          // pre-exist in the doc, so the fresh map contains them.
+          const freshMap = app.scene.getNonDeletedElementsMap();
+          const linearElements = linearElementIds.flatMap((id) => {
+            const ele = freshMap.get(id);
+            return isArrowElement(ele) ? [ele] : [];
+          });
           linearElements.forEach((ele) => {
             let startBinding = ele.startBinding;
             let endBinding = ele.endBinding;

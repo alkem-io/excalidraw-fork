@@ -121,6 +121,16 @@ export const MobileToolBar = ({
     "arrow" | "line"
   >("arrow");
 
+  // reset the nested-panel selector when the overflow ("Other Shapes") menu
+  // closes — otherwise `openSubmenu` survives and reopening the menu immediately
+  // re-opens the last nested panel (reactions / countdown), e.g. after selecting
+  // an emoji or dismissing the menu with an outside click.
+  useEffect(() => {
+    if (!isOtherShapesMenuOpen) {
+      setOpenSubmenu(null);
+    }
+  }, [isOtherShapesMenuOpen]);
+
   // keep lastActiveGenericShape in sync with active tool if user switches via other UI
   useEffect(() => {
     if (
@@ -166,8 +176,13 @@ export const MobileToolBar = ({
   const WIDTH = 36;
   const GAP = 4;
 
-  // hand, selection, freedraw, eraser, rectangle, arrow, others
-  const MIN_TOOLS = 7;
+  // hand, lock, selection, freedraw, eraser, rectangle, arrow, others
+  // (+ the collaboration-only reaction-mode button while collaborating). The
+  // fork adds the always-visible Lock button and the collab Reaction button to
+  // this row, so the width budget must count them — otherwise the toolbar thinks
+  // there's room for extra tools on narrow phones and pushes controls out of the
+  // visible row instead of collapsing them into the overflow menu.
+  const MIN_TOOLS = 8 + (isCollaborating ? 1 : 0);
   const MIN_WIDTH = MIN_TOOLS * WIDTH + (MIN_TOOLS - 1) * GAP;
   const ADDITIONAL_WIDTH = WIDTH + GAP;
 

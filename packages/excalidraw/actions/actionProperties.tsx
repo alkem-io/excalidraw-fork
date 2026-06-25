@@ -1040,49 +1040,70 @@ export const actionChangeFontFamily = register<{
       // following causes re-render so make sure we changed the family
       // otherwise it could cause unexpected issues, such as preventing opening the popover when in wysiwyg
       const nextElements = changeProperty(
-          elements,
-          appState,
-          (oldElement) => {
-            if (
-              isTextElement(oldElement) &&
-              (oldElement.fontFamily !== nextFontFamily ||
-                currentItemFontFamily) // force update on selection
-            ) {
-              const newElement: ExcalidrawTextElement = newElementWith(
-                oldElement,
-                {
-                  fontFamily: nextFontFamily,
-                  lineHeight: getLineHeight(nextFontFamily!),
-                },
-              );
+        elements,
+        appState,
+        (oldElement) => {
+          if (
+            isTextElement(oldElement) &&
+            (oldElement.fontFamily !== nextFontFamily || currentItemFontFamily) // force update on selection
+          ) {
+            const newElement: ExcalidrawTextElement = newElementWith(
+              oldElement,
+              {
+                fontFamily: nextFontFamily,
+                lineHeight: getLineHeight(nextFontFamily!),
+              },
+            );
 
-              const cachedContainer =
-                cachedElements?.get(oldElement.containerId || "") || {};
+            const cachedContainer =
+              cachedElements?.get(oldElement.containerId || "") || {};
 
-              const container = app.scene.getContainerElement(oldElement);
+            const container = app.scene.getContainerElement(oldElement);
 
-              if (resetContainers && container && cachedContainer) {
-                // reset the container back to it's cached version
-                app.scene.mutateElement(container, { ...cachedContainer });
-              }
-
-              if (!skipFontFaceCheck) {
-                uniqueChars = new Set([
-                  ...uniqueChars,
-                  ...Array.from(newElement.originalText),
-                ]);
-              }
-
-              elementContainerMapping.set(newElement, container);
-
-              return newElement;
+            if (resetContainers && container && cachedContainer) {
+              // reset the container back to it's cached version
+              app.scene.mutateElement(container, { ...cachedContainer });
             }
 
-            return oldElement;
-          },
-          true,
+            if (!skipFontFaceCheck) {
+              uniqueChars = new Set([
+                ...uniqueChars,
+                ...Array.from(newElement.originalText),
+              ]);
+            }
+
+            elementContainerMapping.set(newElement, container);
+
+            return newElement;
+          }
+
+          return oldElement;
+        },
+        true,
+      );
+      // fresh-snapshot: re-read post-mutation (resetContainers above mutated the
+      // CONTAINERS through the doc, but `nextElements` holds their stale container
+      // entries — re-read those live so the reset is not reverted by the action's
+      // result. The edited text elements are skipped: their new fontFamily/
+      // lineHeight lives only in the returned `newElementWith` copy, so re-reading
+      // them from the doc would revert the font-family change). Applied to BOTH
+      // the sync redraw path below AND the async font-load path: in the async
+      // case the redraw runs later in `.then()`, but the container reset at
+      // `resetContainers` already wrote through the doc, so the returned elements
+      // must reflect it now or `replaceAllElements` would clobber the reset.
+      const editedTextIds = new Set(
+        [...elementContainerMapping.keys()].map((element) => element.id),
+      );
+      const getFreshElements = () => {
+        const freshMap = app.scene.getNonDeletedElementsMap();
+        return nextElements.map((element) =>
+          editedTextIds.has(element.id)
+            ? element
+            : freshMap.get(element.id) ?? element,
         );
-      Object.assign(result, { elements: nextElements });
+      };
+
+      Object.assign(result, { elements: getFreshElements() });
 
       // size is irrelevant, but necessary
       const fontString = `10px ${getFontFamilyString({
@@ -1097,24 +1118,8 @@ export const actionChangeFontFamily = register<{
           redrawTextBoundingBox(element, container, app.scene);
         }
 
-        // fresh-snapshot: re-read post-mutation (redrawTextBoundingBox resized
-        // the bound-text CONTAINERS through the doc, but `nextElements` holds
-        // their stale container entries — re-read those live so the resize is
-        // not reverted. The edited text elements are skipped: their new
-        // fontFamily/lineHeight lives only in the returned `newElementWith` copy
-        // (which the redraw also mutated in place for geometry), so re-reading
-        // them from the doc would revert the font-family change)
-        const editedTextIds = new Set(
-          [...elementContainerMapping.keys()].map((element) => element.id),
-        );
-        const freshMap = app.scene.getNonDeletedElementsMap();
-        Object.assign(result, {
-          elements: nextElements.map((element) =>
-            editedTextIds.has(element.id)
-              ? element
-              : freshMap.get(element.id) ?? element,
-          ),
-        });
+        // re-read again after the synchronous redraw resized the containers.
+        Object.assign(result, { elements: getFreshElements() });
       } else {
         // otherwise try to load all font faces for the given chars and redraw elements once our font faces loaded
         window.document.fonts.load(fontString, chars).then((fontFaces) => {

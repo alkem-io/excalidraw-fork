@@ -144,22 +144,33 @@ export const MobileMenu = ({
     );
   };
 
+  // Match the desktop (LayerUI) guard: the reaction emoji picker + countdown
+  // timer island live behind `!viewModeEnabled && openDialog !==
+  // elementLinkSelector` there, so hide these collaboration overlays in the same
+  // read-only / link-selector flows on mobile instead of leaking them over the
+  // canvas.
+  const showCollabOverlays =
+    !appState.viewModeEnabled &&
+    appState.openDialog?.name !== "elementLinkSelector";
+
   const renderPopups = () => {
     return (
       <>
-        {reactions.showEmojiPicker && !reactions.reactionModeActive && (
-          <div
-            ref={reactions.emojiPickerRef}
-            className="emoji-submenu__panel emoji-submenu__panel--mobile"
-            data-testid="emoji-picker-wrapper"
-          >
-            <EmojiPickerPanel
-              onSelect={(emoji) => {
-                reactions.handleSelectReactionEmoji(emoji);
-              }}
-            />
-          </div>
-        )}
+        {showCollabOverlays &&
+          reactions.showEmojiPicker &&
+          !reactions.reactionModeActive && (
+            <div
+              ref={reactions.emojiPickerRef}
+              className="emoji-submenu__panel emoji-submenu__panel--mobile"
+              data-testid="emoji-picker-wrapper"
+            >
+              <EmojiPickerPanel
+                onSelect={(emoji) => {
+                  reactions.handleSelectReactionEmoji(emoji);
+                }}
+              />
+            </div>
+          )}
       </>
     );
   };
@@ -213,7 +224,7 @@ export const MobileMenu = ({
 
       <FixedSideContainer side="top" className="App-top-bar">
         {renderAppTopBar()}
-        {countdownTimer.isActive && (
+        {showCollabOverlays && countdownTimer.isActive && (
           <Island
             className="mobile-countdown-timer-island"
             style={{
